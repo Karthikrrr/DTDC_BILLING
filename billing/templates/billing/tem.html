@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        /* PDF specific resets */
+        @page { size: A4; margin: 10mm; }
+        body { 
+            font-family: Arial, Helvetica, sans-serif; 
+            font-size: 11px; 
+            color: #000; 
+            margin: 0; 
+            padding: 0; 
+            background-color: #fff;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 800px;
+            margin: auto;
+            border: 1px solid #000;
+        }
+
+        /* Table styles to prevent border issues */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            table-layout: fixed;
+        }
+        
+        td, th { 
+            border: 1px solid #000; 
+            padding: 4px 6px; 
+            vertical-align: top;
+            overflow: hidden;
+        }
+
+        /* Header layout */
+        .header-left { width: 65%; border-right: 1px solid #000; }
+        .header-right { width: 35%; text-align: center; vertical-align: middle; border-bottom: 1px solid #000; }
+        .company-title { font-size: 20px; font-weight: bold; margin: 0; } 
+        .sub-header { font-size: 10px; font-weight: bold; margin: 2px 0; }
+
+        .tax-invoice-header {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 4px 0;
+            border-bottom: 1px solid #000;
+            background-color: #fff;
+        } 
+
+        /* Main Details Section */
+        .details-wrapper { display: flex; width: 100%; }
+        .receiver-section { width: 58%; border-right: 1px solid #000; }
+        .summary-section { width: 42%; }
+        
+        .no-border-table td { border: none; border-bottom: 1px solid #000; }
+        .no-border-table tr:last-child td { border-bottom: none; }
+        .receiver-box { height: 185px; padding: 10px; } 
+
+        /* Text Styles */
+        .red-bold { color: #d00000; font-weight: bold; } 
+        .right-text { text-align: right; }
+        .center-text { text-align: center; }
+
+        /* Payment Advice Section */
+        .advice-bar {
+            background-color: #fff;
+            text-align: center;
+            font-weight: bold;
+            padding: 4px;
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+        } 
+
+        /* Footer / Acknowledgement */
+        .tear-off { border-top: 1.5px dashed #000; margin-top: 20px; padding-top: 10px; }
+        .ack-container { border-top: 1px solid #000; display: flex; }
+        .ack-box-left { width: 50%; border-right: 1px solid #000; height: 110px; padding: 5px; }
+        .ack-box-right { width: 50%; text-align: center; padding: 5px; font-weight: bold; } 
+
+        .barcode-img { width: 160px; height: 35px; display: block; margin: 10px auto 0; }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <table>
+        <tr>
+            <td class="header-left" style="border-bottom: 1px solid #000;">
+                <h1 class="company-title">HARSHITA INTERNATIONAL</h1> 
+                <div class="sub-header">(Domestic and International Courier Service)</div>
+                <div>SHOP NUMBER -77 1ST FLOOR SECTOR 17 HUDA MARKET</div> 
+                <div>GURGAON HARYANA 122001</div> 
+                <div style="margin-top:5px;">Email ID: bheemnagar.ggr@fr.dtdc.com</div> 
+                <div style="font-weight: bold; margin-top: 5px;">ORIGINAL FOR RECIPIENT</div> 
+            </td>
+            <td class="header-right">
+                <img src="https://karthikr.great-site.net/dtdc.png" alt="DTDC LOGO" style="width: 150px;">
+            </td>
+        </tr>
+    </table>
+
+    <div class="tax-invoice-header">TAX INVOICE</div>
+
+    <div class="details-wrapper">
+        <div class="receiver-section">
+            <div style="padding: 4px; border-bottom: 1px solid #000;">Details of Receiver | Billed to:</div> 
+            <div class="receiver-box">
+                <strong>M.R.POINT</strong><br><br> 
+                FIRST FLOOR, NO.240/1, R J COMPLEX SURYA BAKERY CIRCLE,<br> 
+                HEBBAL, MYSORE, Mysuru, Karnataka, 570016<br><br> 
+                <strong>GST No: 29ANSPV4241P2ZU</strong><br> 
+                PO Number: br>
+                State: Karnataka br>
+                Place of supply (State Name & Code): Karnataka & 29 
+            </div>
+        </div>
+        <div class="summary-section">
+            <table class="no-border-table">
+                <tr><td>GST Number</td><td class="right-text">06HJOPS7184H1ZC</td></tr> 
+                <tr><td>Invoice Period</td><td class="right-text">01/09/2025 To 30/09/2025</td></tr> 
+                <tr><td>Invoice No.</td><td class="right-text"><strong>HRS/25-26-100</strong></td></tr> 
+                <tr><td>Invoice Date</td><td class="right-text"><strong>01-Oct-2025</strong></td></tr> 
+                <tr><td>Amount</td><td class="right-text">50793.13</td></tr> 
+                <tr><td>Discount 0%</td><td class="right-text">0.00</td></tr> 
+                <tr><td>Fuel Surcharge</td><td class="right-text">0.00</td></tr> 
+                <tr><td>Taxable Value</td><td class="right-text">50793.13</td></tr> 
+                <tr><td>CGST @ 0.0%</td><td class="right-text">0.00</td></tr> 
+                <tr><td>SGST @ 0.0%</td><td class="right-text">0.00</td></tr> 
+                <tr><td>IGST @ 18.0%</td><td class="right-text">9142.76</td></tr> 
+                <tr><td><strong>Grand Total (Round-off)</strong></td><td class="right-text"><strong>59936.00</strong></td></tr> 
+            </table>
+        </div>
+    </div>
+
+    <table>
+        <tr>
+            <td style="width: 58%; border-top: none;">Tax subject to reverse charge &nbsp;&nbsp;&nbsp; YES &nbsp;&nbsp; <strong>NO</strong></td> 
+            <td style="border-top: none; border-left: none;"></td>
+        </tr>
+    </table>
+
+    <div style="padding: 8px; border-bottom: 1px solid #000; line-height: 1.4;">
+        Description of Service: <strong>Courier Services</strong> &nbsp;&nbsp; SAC: 996812 &nbsp;&nbsp; State: Haryana &nbsp;&nbsp; Code: 06<br> 
+        <strong>Bank Name: IDFC FIRST BANK</strong><br> 
+        <strong>Account No: 75330745316</strong><br> 
+        <strong>IFSC Code: IDFB0021003</strong><br> 
+        PAN No: HJOPS7184H<br> 
+        MSME No: br>
+        <span class="red-bold">Payment Due Date:</span><br> 
+        Please pay by Cheque/Draft favouring M/s <strong>HARSHITA INTERNATIONAL</strong><br> 
+        Late payments are subject to an interest charged @ 10% p.a.<br> 
+        While making the payments, please handover the payment advice with full details.<br> 
+        All dispute are subject to gurgaon Jurisdiction.<br> 
+        Any mistake / correction found in the Invoice has to be reported in writing 7-working days...<br> 
+        <span style="font-size: 10px;">THIS IS A COMPUTER GENERATED INVOICE & DOES NOT REQUIRE ANY SIGNATURES.</span> 
+    </div>
+
+    <div class="advice-bar">Payment Advice (Please detach and return with your payment)</div> 
+    <table>
+        <tr style="font-weight: bold;">
+            <td>Invoice No: HRS/25-26-100</td> 
+            <td>Date: 01-Oct-2025</td> 
+            <td colspan="4">Client Name: M.R.POINT</td> 
+        </tr>
+        <tr class="center-text" style="font-size: 10px;">
+            <td>Name of Bank</td> 
+            <td>Cheque/ DD Number</td> 
+            <td>Cheque/ DD Date</td> 
+            <td>Invoice Amount(Rs.)</td> 
+            <td>TDS(Rs.)</td> 
+            <td>Net Amount(Rs.)</td> 
+        </tr>
+        <tr style="height: 25px;">
+            <td></td><td></td><td></td>
+            <td class="right-text"><strong>59936.00</strong></td> 
+            <td></td><td></td>
+        </tr>
+        <tr>
+            <td colspan="3">Remarks: td>
+            <td colspan="3"><strong>Total: Fifty Nine Thousand Nine Hundred Thirty Six Rupees Only.</strong></td> 
+        </tr>
+    </table>
+
+    <div style="display: flex; justify-content: space-between; padding: 5px 10px;">
+        <div>&lt;&lt;&lt; Scan & Pay &gt;&gt;</div> 
+        <div style="font-weight: bold;">For HARSHITA INTERNATIONAL</div> 
+    </div>
+
+    <div class="tear-off"></div>
+    <div style="text-align: center; font-weight: bold;">HARSHITA INTERNATIONAL</div> 
+    <div style="text-align: center; font-size: 10px; margin-bottom: 5px;">BILL ACKNOWLEDGMENT</div> 
+
+    <table style="border: none;">
+        <tr>
+            <td style="border: none;">Client Code: <strong>MYSORE</strong></td> 
+            <td style="border: none;"><strong>HRS/25-26-100</strong></td> 
+            <td style="border: none;">Invoice Date: 01-Oct-2025</td> 
+            <td style="border: none;">Amount (INR) <strong>59936.00</strong></td> 
+        </tr>
+    </table>
+
+    <div class="ack-container">
+        <div class="ack-box-left">
+            Name of the Receiver <br><br>
+            Recieved Date 
+        </div>
+        <div class="ack-box-right">
+            Sign & Seal 
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

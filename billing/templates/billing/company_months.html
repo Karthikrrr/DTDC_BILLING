@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Download Company Monthly PDF</h2>
+<form method="GET" action="{% url 'billing:download_company_month_pdf' %}" class="mt-3">
+  <div class="mb-3">
+    <label>Company</label>
+    <select name="company" class="form-select" required>
+      <option value="">-- Select --</option>
+      {% for c in companies %}
+      <option value="{{ c.id }}">{{ c.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="mb-3">
+    <label>Month</label>
+    <select name="month" class="form-select" required>
+      <option value="">-- Select --</option>
+      {% for m in months %}
+      <option value="{{ m }}">{{ m }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <button class="btn btn-primary">Download PDF</button>
+</form>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% if error %}
+<div class="alert alert-danger">
+  {{ error }}
+</div>
+{% endif %}
+
+    <h2>Scan / Upload Dockets</h2>
+
+
+<div class="container">
+  <!-- Use gap-2 for spacing between the buttons -->
+  <div class="row justify-content">
+    <div class="col-auto">
+      <a class="btn btn-success" href="{% url 'missing_dockets' %}">View Missing Dockets</a>
+    </div>
+    <div class="col-auto">
+      <a class="btn btn-primary" href="{% url 'download_excel' %}">Download Final Excel</a>
+    </div>
+  </div>
+</div>
+
+<br>
+
+
+{% if message %}
+<div class="alert alert-success">{{ message }}</div>
+{% endif %}
+
+<form method="post">
+  {% csrf_token %}
+
+  <div class="mb-3">
+    <label class="form-label">Company name</label>
+    <select name="company" class="form-select" required>
+      <option value="">Select Company</option>
+      {% for c in companies %}
+        <option value="{{ c.name }}">{{ c.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Docket Numbers (one per line)</label>
+    <textarea
+      name="docket_numbers"
+      class="form-control"
+      rows="8"
+      autofocus
+      placeholder="Scan or type dockets here"
+      required></textarea>
+  </div>
+
+  <button class="btn btn-primary">Upload Dockets</button>
+</form>
+
+<br>
+
+
+{% endblock %}

@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  .dashboard-card {
+    border-radius: 12px;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    height: 100%;
+  }
+
+  .dashboard-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+  }
+
+  .dashboard-icon {
+    font-size: 38px;
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    border-left: 5px solid #0d6efd;
+    padding-left: 12px;
+    margin: 40px 0 20px;
+    font-weight: 600;
+  }
+</style>
+
+<div class="container">
+
+  <h1 class="mb-4 fw-bold">📊 Billing Dashboard</h1>
+
+  <!-- ================= Billing Section ================= -->
+  <h4 class="section-title">Billing Operations</h4>
+
+  <div class="row g-4">
+
+    <div class="col-md-3">
+      <a href="{% url 'billing:upload_monthly' %}" class="text-decoration-none text-dark">
+        <div class="card dashboard-card text-center p-4">
+          <div class="dashboard-icon text-primary">📤</div>
+          <h5>Upload Billing File</h5>
+          <small class="text-muted">Upload monthly billing Excel</small>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-md-3">
+      <a href="{% url 'billing:download_report_page' %}" class="text-decoration-none text-dark">
+        <div class="card dashboard-card text-center p-4">
+          <div class="dashboard-icon text-success">📥</div>
+          <h5>Download Reports</h5>
+          <small class="text-muted">Company & date-wise bills</small>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-md-3">
+      <a href="/admin/billing/company/" class="text-decoration-none text-dark">
+        <div class="card dashboard-card text-center p-4">
+          <div class="dashboard-icon text-info">🏢</div>
+          <h5>Manage Companies</h5>
+          <small class="text-muted">Add / Edit billing companies</small>
+        </div>
+      </a>
+    </div>
+
+  </div>
+
+  <!-- ================= Manifest Section ================= -->
+  <h4 class="section-title">Manifest Operations</h4>
+
+  <div class="row g-4">
+
+    <div class="col-md-3">
+      <a href="{% url 'upload_manifest' %}" class="text-decoration-none text-dark">
+        <div class="card dashboard-card text-center p-4">
+          <div class="dashboard-icon text-warning">📄</div>
+          <h5>Upload Manifest</h5>
+          <small class="text-muted">Upload manifest Excel file</small>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-md-3">
+      <a href="{% url 'scan_docket' %}" class="text-decoration-none text-dark">
+        <div class="card dashboard-card text-center p-4">
+          <div class="dashboard-icon text-dark">🔍</div>
+          <h5>Scan / Enter Docket</h5>
+          <small class="text-muted">Search or manually add dockets</small>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-md-3">
+      <a href="{% url 'missing_dockets' %}" class="text-decoration-none text-dark">
+        <div class="card dashboard-card text-center p-4">
+          <div class="dashboard-icon text-danger">⚠️</div>
+          <h5>Missing Dockets</h5>
+          <small class="text-muted">Find unlinked consignments</small>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-md-3">
+      <a href="{% url 'download_excel' %}" class="text-decoration-none text-dark">
+        <div class="card dashboard-card text-center p-4">
+          <div class="dashboard-icon text-secondary">📊</div>
+          <h5>Final Excel</h5>
+          <small class="text-muted">Download final processed data</small>
+        </div>
+      </a>
+    </div>
+
+  </div>
+
+  <!-- ================= Merge Section ================= -->
+  <h4 class="section-title">Final Merge</h4>
+
+  <div class="row g-4">
+    <div class="col-md-3">
+      <a href="{% url 'merge_excel' %}" class="text-decoration-none text-dark">
+        <div class="card dashboard-card text-center p-4">
+          <div class="dashboard-icon text-info">🔗</div>
+          <h5>Merge Excel Files</h5>
+          <small class="text-muted">Combine billing & manifest data</small>
+        </div>
+      </a>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

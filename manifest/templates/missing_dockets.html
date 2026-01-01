@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Missing Dockets</h2>
+
+{% if missing %}
+<div class="mb-3">
+  <a href="{% url 'download_missing_excel' %}" class="btn btn-success">
+    Download Missing Dockets (Excel)
+  </a>
+</div>
+{% endif %}
+
+<table class="table table-bordered table-striped">
+  <thead>
+    <tr>
+      <th>Docket No</th>
+      <th>Booking Date</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for d in missing %}
+    <tr>
+      <td>{{ d.docket_no }}</td>
+      <td>{{ d.manifest_date }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="2" class="text-center">
+        No missing dockets 🎉
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

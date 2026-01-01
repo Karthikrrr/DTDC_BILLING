@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Upload DTDC Manifest</h2>
+
+{% if error %}
+<div class="alert alert-danger">
+  {{ error }}
+</div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <input type="file" name="file" required>
+  <button class="btn btn-primary">Upload</button>
+</form>
+{% endblock %}

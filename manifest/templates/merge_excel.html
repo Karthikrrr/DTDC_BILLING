@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Merge Excel Files</h2>
+
+{% if message %}
+<div class="alert alert-danger">{{ message }}</div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+
+  <div class="mb-3">
+    <label class="form-label">Excel File 1 (Manifest)</label>
+    <input type="file" name="excel1" class="form-control" required>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Excel File 2 (Additional Data)</label>
+    <input type="file" name="excel2" class="form-control" required>
+  </div>
+
+  <button class="btn btn-primary">
+    Merge Excel Files
+  </button>
+</form>
+
+{% endblock %}

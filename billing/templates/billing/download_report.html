@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Select Company & Month</h2>
+
+<form method="get" action="" id="invoiceForm">
+
+    <label>Company:</label>
+    <select name="company" class="form-select" required>
+        <option value="">-- Select --</option>
+        {% for c in companies %}
+        <option value="{{ c.id }}">{{ c.name }}</option>
+        {% endfor %}
+    </select>
+
+    <label class="mt-2">Month:</label>
+    <select name="month" class="form-select" required>
+        <option value="">-- Select --</option>
+        {% for m in months %}
+        <option value="{{ m }}">{{ m }}</option>
+        {% endfor %}
+    </select>
+
+    <button type="submit" class="btn btn-primary mt-3 w-100">
+        Open Editable Invoice
+    </button>
+
+</form>
+
+<script>
+document.getElementById("invoiceForm").onsubmit = function(e){
+    const c = this.company.value;
+    const m = this.month.value;
+
+    if(c && m){
+        window.location.href = `/billing/invoice/${c}/${m}/`;
+        return false;
+    }
+}
+</script>
+
+{% endblock %}

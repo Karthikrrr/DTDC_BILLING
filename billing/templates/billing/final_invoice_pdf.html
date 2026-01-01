@@ -1,0 +1,544 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @page {
+        size: A4;
+        margin: 0.5cm;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        font-size: 10px;
+        line-height: 1.2;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 15px;
+        display: flex; /* Use flexbox for horizontal alignment */
+        justify-content: space-between; /* Space out logo and text */
+        align-items: center; /* Vertically align items */
+        padding: 0 10px; /* Small padding inside header */
+      }
+      .header-info {
+        flex-grow: 1; /* Allows info to take up central space */
+        text-align: center;
+        margin: 0 10px; /* Spacing between logo and text */
+      }
+      .header h1 {
+        font-size: 16px;
+        font-weight: bold;
+        margin: 0 0 2px 0;
+      }
+      .header .subtitle {
+        font-size: 12px;
+        margin: 0 0 5px 0;
+      }
+      .address {
+        text-align: center;
+        margin-bottom: 2px;
+        font-size: 10px;
+      }
+      .logo {
+        margin-left: 10px;
+        max-width: 200px; /* Control image size */
+        height: auto;
+        display: block;
+      }
+      .empty-spacer {
+        width: 150px; /* Reserves space to balance the header if needed */
+      }
+      .invoice-label {
+        text-align: center;
+        font-weight: bold;
+        margin-bottom: 10px;
+        font-size: 14px;
+      }
+      .main-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 15px;
+        font-size: 10px;
+      }
+      .main-table td {
+        border: 1px solid #000;
+        padding: 6px 8px;
+        vertical-align: top;
+      }
+      .billed-to {
+        width: 40%;
+      }
+      .tax-table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid #000;
+      }
+      /* ... (Remaining CSS styles from the previous turn) ... */
+      .tax-table td {
+        padding: 2px 5px;
+        border: 1px solid #000;
+        text-align: left;
+      }
+      .tax-table td:last-child {
+        text-align: right;
+      }
+      .tax-table tr:last-child td {
+        font-weight: bold;
+      }
+      .service-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0;
+        font-size: 10px;
+      }
+      .bank-details {
+        margin: 10px 0;
+        line-height: 1.5;
+      }
+      .footer-notes {
+        margin: 10px 0;
+        font-size: 9px;
+        line-height: 1.5;
+      }
+      .payment-advice {
+        border: 2px solid #000;
+        padding: 10px;
+        margin: 15px 0;
+      }
+      .payment-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0;
+        font-size: 10px;
+      }
+      .payment-table th,
+      .payment-table td {
+        border: 1px solid #000;
+        padding: 5px;
+        text-align: center;
+      }
+      .payment-table th {
+        background-color: #f0f0f0;
+        font-weight: bold;
+      }
+      .acknowledgment {
+        border: 2px solid #000;
+        padding: 10px;
+        margin: 15px 0;
+        font-size: 10px;
+      }
+      .ack-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 5px;
+      }
+      .ack-table td {
+        border: 1px solid #000;
+        padding: 8px;
+        vertical-align: middle;
+      }
+      .summary-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 9px;
+        margin: 10px 0;
+        table-layout: fixed;
+      }
+      .summary-table th,
+      .summary-table td {
+        border: 1px solid #000;
+        padding: 4px 3px;
+        text-align: center;
+        word-wrap: break-word;
+      }
+      .totals-table {
+        width: 40%;
+        margin-left: auto;
+        border-collapse: collapse;
+        font-size: 10px;
+      }
+      .totals-table td {
+        border: 1px solid #000;
+        padding: 4px 8px;
+      }
+      .totals-table .label {
+        width: 60%;
+        font-weight: bold;
+      }
+      .totals-table .value {
+        width: 40%;
+        text-align: right;
+        font-weight: bold;
+      }
+      .page-break {
+        page-break-before: always;
+      }
+      .bold {
+        font-weight: bold;
+      }
+      .text-right {
+        text-align: right;
+      }
+      .text-center {
+        text-align: center;
+      }
+      .border-bottom {
+        border-bottom: 1px solid #000;
+      }
+      .mt-10 {
+        margin-top: 10px;
+      }
+      .mb-10 {
+        margin-bottom: 10px;
+      }
+      .amount-highlight {
+        font-weight: bold;
+        font-size: 11px;
+      }
+      .summary-totals {
+        text-align: right;
+        font-size: 10px;
+        margin-top: 10px;
+      }
+      .summary-totals span {
+        margin-left: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <img
+          src="https://karthikr.great-site.net/dtdc.png"
+          alt="DTDC"
+          class="logo"
+      />
+      
+      <div class="header-info">
+        <div class="bold" style="font-size: 16px;">HARSHITA INTERNATIONAL</div>
+        <div class="subtitle">(Domestic and International Courier Service)</div>
+        <div class="address">SHOP NUMBER-77 1ST FLOOR SECTOR 17 HUDA MARKET [cite: 3]</div>
+        <div class="address">GURGAON HARYANA 122001 [cite: 3]</div>
+      </div>
+      
+      <div class="empty-spacer"></div>
+    </div>
+
+    <div class="text-right bold mb-10" style="margin-right: 5px;">
+        <span style="float: left; margin-left: 5px;">ORIGINAL FOR RECIPIENT [cite: 5]</span>
+        Email ID: bheemnagar.ggr@fr.dtdc.com [cite: 4]
+    </div>
+
+    <div class="invoice-label">TAX INVOICE [cite: 13]</div>
+
+    <table class="main-table">
+      <tr>
+        <td class="billed-to">
+          <div class="detail-row">
+            <strong style="font-size: 11px;">Details of Receiver | Billed to: [cite: 6]</strong>
+          </div>
+          <div class="detail-row bold" style="margin-top: 5px;">{{ company }} [cite: 7]</div>
+          <div class="detail-row">
+            FIRST FLOOR, NO.240/1, R J COMPLEX SURYA BAKERY CIRCLE, HEBBAL,
+            MYSORE, Mysuru, Karnataka, 570016 [cite: 8]
+          </div>
+          <div class="detail-row"> <strong> GST No: </strong> {{ gst }} [cite: 9]</div>
+          <div class="detail-row">PO Number : [cite: 10]</div>
+          <div class="detail-row">State: Karnataka [cite: 11]</div>
+          <div class="detail-row">
+            Place of supply (State Name & Code): Karnataka & 29 [cite: 12]
+          </div>
+        </td>
+        <td class="">
+          <table class="tax-table" width="100%">
+            <tr>
+              <td><strong>GST Number</strong></td>
+              <td class="text-right">06HJOPS7184H1ZC [cite: 14]</td>
+            </tr>
+            <tr>
+              <td><strong>Invoice Period</strong></td>
+              <td class="text-right">{{ period }} [cite: 14]</td>
+            </tr>
+            <tr>
+              <td><strong>Invoice No.</strong></td>
+              <td class="text-right amount-highlight">{{ invoice_no }} [cite: 14]</td>
+            </tr>
+            <tr>
+              <td><strong>Invoice Date</strong></td>
+              <td class="text-right amount-highlight">{{ invoice_date|date:"d-M-Y" }} [cite: 14]</td>
+            </tr>
+            <tr>
+              <td><strong>Amount</strong></td>
+              <td class="text-right amount-highlight">{{ total|floatformat:2 }} [cite: 14]</td>
+            </tr>
+            <tr>
+              <td><strong>Discount 0%</strong></td>
+              <td class="text-right">0.00 [cite: 14]</td>
+            </tr>
+            <tr>
+              <td><strong>Fuel Surcharge</strong></td>
+              <td class="text-right">0.00 [cite: 14]</td>
+            </tr>
+            <tr>
+              <td><strong>Taxable Value</strong></td>
+              <td class="text-right">{{ total|floatformat:2 }} [cite: 14]</td>
+            </tr>
+            <tr>
+              <td><strong>CGST @ 0.0%</strong></td>
+              <td class="text-right">0.00 [cite: 14]</td>
+            </tr>
+            <tr>
+              <td><strong>SGST @ 0.0%</strong></td>
+              <td class="text-right">0.00 [cite: 14]</td>
+            </tr>
+            <tr>
+              <td><strong>IGST @ {{ igst_percent }}%</strong></td>
+              <td class="text-right">{{ igst_amount|floatformat:2 }} [cite: 14]</td>
+            </tr>
+            <tr>
+              <td><strong>Grand Total (Round-off)</strong></td>
+              <td class="text-right amount-highlight">{{ grand_total|floatformat:2 }} [cite: 14]</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <div class="mt-10">
+      <div style="float: right;">SAC: 996812 [cite: 17]</div>
+      <strong>Tax subject to reverse charge</strong> [cite: 18] &nbsp;&nbsp; YES [cite: 15] &nbsp;&nbsp; NO [cite: 16]
+      <div style="clear: both;"></div>
+    </div>
+
+    <div class="service-table">
+      <div><strong>Description of Service:</strong> Courier Services [cite: 19, 20]</div>
+      <div class="bank-details">
+        <strong>Bank Name:</strong> IDFC FIRST BANK [cite: 21]<br />
+        <strong>Account No:</strong> 75330745316 [cite: 22]<br />
+        <strong>IFSC Code:</strong> IDFB0021003 [cite: 23]<br />
+        <strong>PAN No:</strong> HJOPS7184H [cite: 24]<br />
+        <strong>State:</strong> Haryana [cite: 25] &nbsp;&nbsp; <strong>Code:</strong> 06 [cite: 26]<br />
+        <strong>MSME No:</strong> [cite: 27]<br />
+        <strong>Payment Due Date:</strong> [cite: 28]
+      </div>
+    </div>
+
+    <div class="footer-notes">
+      <div>
+        Please pay by Cheque/Draft favouring M/s
+        <strong>HARSHITA INTERNATIONAL [cite: 29, 30]</strong>
+      </div>
+      <div>Late payments are subject to an interest charged @ 10% p.a. [cite: 31]</div>
+      <div>
+        While making the payments, please handover the payment advice with full
+        details. [cite: 32]
+      </div>
+      <div>All dispute are subject to gurgaon Jurisdiction. [cite: 33]</div>
+      <div>
+        Any mistake / correction found in the Invoice has to be reported in
+        writing 7-working days from the receipt of the invoice. [cite: 34]
+      </div>
+      <div class="mt-10">
+        <strong
+          >THIS IS A COMPUTER GENRATED INVOICE & DOES NOT REQUIRE ANY
+          SIGNATURES. [cite: 35]</strong
+        >
+      </div>
+    </div>
+
+    <div class="border-bottom mt-10 mb-10" style="border-width: 2px;"></div>
+
+    <div class="payment-advice">
+      <div class="text-center bold">
+        Payment Advice (Please detach and return with your payment) [cite: 36]
+      </div>
+
+      <div style="display: flex; justify-content: space-between; margin: 10px 0; font-size: 10px;">
+        <div><strong>Date:</strong> {{ invoice_date|date:"d-M-Y" }} [cite: 37]</div>
+        <div><strong>Invoice No:</strong> {{ invoice_no }} [cite: 38]</div>
+        <div><strong>Client Name:</strong> M.R.POINT [cite: 42]</div>
+      </div>
+
+      <table class="payment-table">
+        <thead>
+          <tr>
+            <th>Name of Bank [cite: 39]</th>
+            <th>Cheque/ DD Number [cite: 39]</th>
+            <th>Cheque/ DD Date [cite: 39]</th>
+            <th>Invoice Amount(Rs.) [cite: 39]</th>
+            <th>TDS(Rs.) [cite: 39]</th>
+            <th>Net Amount (Rs.) [cite: 39]</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="bold">{{ grand_total|floatformat:2 }} [cite: 39]</td>
+            <td></td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="font-size: 10px;">
+        <div>Remarks : [cite: 40]</div>
+        <div><< Scan & Pay>> [cite: 41]</div>
+      </div>
+
+
+      <div class="text-right mt-10">
+        <div class="bold" style="float: left;">Total: {{ total_in_words }} [cite: 43]</div>
+        For <strong>HARSHITA INTERNATIONAL [cite: 43]</strong>
+        <div style="clear: both;"></div>
+      </div>
+    </div>
+
+    <div class="acknowledgment">
+      <div class="text-center bold">HARSHITA INTERNATIONAL [cite: 50]</div>
+      <div class="text-center bold">BILL ACKNOWLEDGMENT [cite: 50]</div>
+
+      <div style="display: flex; justify-content: space-between; margin-top: 5px; font-size: 10px;">
+        <div class="bold">{{ invoice_no }} [cite: 51]</div>
+        <div class="bold">Invoice Date: {{ invoice_date|date:"d-M-Y" }} [cite: 52]</div>
+        <div class="bold">Amount(INR) [cite: 53]</div>
+        <div class="bold">{{ grand_total|floatformat:2 }} [cite: 54]</div>
+      </div>
+
+      <table class="ack-table" style="margin-top: 10px;">
+        <tr>
+          <td style="width: 15%;"><strong>Client Code:</strong> [cite: 44]</td>
+          <td style="width: 35%;">MYSORE [cite: 44]</td>
+          <td style="width: 15%;"><strong>Client Name:</strong> [cite: 46]</td>
+          <td style="width: 35%;">M.R.POINT [cite: 47]</td>
+        </tr>
+        <tr>
+          <td>Name of the Receiver [cite: 48]</td>
+          <td></td>
+          <td>Received Date [cite: 49]</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td colspan="2" class="text-center">
+            <strong style="float: left;">{{ invoice_no }} [cite: 45]</strong>
+            <strong style="float: right;">Client Name: M.R.POINT [cite: 47]</strong>
+          </td>
+          <td colspan="2" class="text-right">Sign & Seal [cite: 55]</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="page-break"></div>
+
+    <div class="summary-section">
+      <div class="summary-header">
+        <h2>SUMMARY [cite: 56]</h2>
+        <div><strong>HARSHITA INTERNATIONAL [cite: 57]</strong></div>
+        <div>To: M.R.POINT [cite: 58, 59]</div>
+      </div>
+
+      <div style="margin-bottom: 10px; font-size: 10px;">
+        <strong>Invoice No:</strong> {{ invoice_no }} [cite: 60] &nbsp;&nbsp;&nbsp;
+        <strong>Invoice Date:</strong> {{ invoice_date|date:"d-M-Y" }} [cite: 60]
+        &nbsp;&nbsp;&nbsp; <strong>From</strong> {{ from_date|date:"d-Sep-2025" }} [cite: 60]
+        <strong>To</strong> {{ to_date|date:"d-Sep-2025" }} [cite: 60]
+      </div>
+
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th style="width: 5%;">SNo [cite: 61]</th>
+            <th style="width: 10%;">Awb No. [cite: 61]</th>
+            <th style="width: 10%;">Date [cite: 61]</th>
+            <th style="width: 5%;">Origin [cite: 61]</th>
+            <th style="width: 15%;">Destination [cite: 61]</th>
+            <th style="width: 5%;">State [cite: 61]</th>
+            <th style="width: 5%;">Pcs [cite: 61]</th>
+            <th style="width: 10%;">Weight D/N [cite: 61]</th>
+            <th style="width: 10%;">Amount [cite: 61]</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for bill in bills %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ bill.docket_no }}</td>
+            <td>{{ bill.date|date }}</td>
+            <td>GGN</td>
+            <td>{{ bill.destination }}</td>
+            <td>{{ bill.state|default:"KA" }}</td>
+            <td>{{ bill.pieces }}</td>
+            <td>{{ bill.weight|floatformat:3 }} N</td>
+            <td>{{ bill.amount|floatformat:2 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="summary-totals">
+        <strong>Total Awb= {{ bills|length }} [cite: 62]</strong>
+        <span><strong>Total Pcs = {{ total_pieces }} [cite: 63, 64]</strong></span>
+      </div>
+
+      <table class="totals-table">
+        <tr>
+          <td class="label">Sub Total 1 [cite: 65]</td>
+          <td class="value">{{ total|floatformat:2 }} [cite: 66]</td>
+        </tr>
+        <tr>
+          <td class="label"></td>
+          <td class="value">0.00 [cite: 67]</td>
+        </tr>
+        <tr>
+          <td class="label">Sub Total 2 [cite: 68]</td>
+          <td class="value">{{ total|floatformat:2 }} [cite: 68]</td>
+        </tr>
+        <tr>
+          <td class="label">Discount 0% [cite: 68]</td>
+          <td class="value">0.00 [cite: 68]</td>
+        </tr>
+        <tr>
+          <td class="label">Fuel Surcharge [cite: 68]</td>
+          <td class="value">0.00 [cite: 68]</td>
+        </tr>
+        <tr>
+          <td class="label">Taxable Value [cite: 68]</td>
+          <td class="value">{{ total|floatformat:2 }} [cite: 68]</td>
+        </tr>
+        <tr>
+          <td class="label">CGST @ 0.0% [cite: 68]</td>
+          <td class="value">0.00 [cite: 68]</td>
+        </tr>
+        <tr>
+          <td class="label">SGST @ 0.0% [cite: 68]</td>
+          <td class="value">0.00 [cite: 68]</td>
+        </tr>
+        <tr>
+          <td class="label">IGST @ {{ igst_percent }}% [cite: 68]</td>
+          <td class="value">{{ igst_amount|floatformat:2 }} [cite: 68]</td>
+        </tr>
+        <tr>
+          <td class="label">Grand Total (Round-off) [cite: 68]</td>
+          <td class="value">{{ grand_total|floatformat:2 }} [cite: 68]</td>
+        </tr>
+      </table>
+
+      <div class="text-center mt-10 bold">
+        {{ total_in_words }} [cite: 69]
+      </div>
+
+      <div class="summary-totals" style="text-align: left; margin-top: 15px;">
+        <strong>Sub Total: {{ total|floatformat:2 }} [cite: 70, 71]</strong>
+        <span><strong>Page Total: {{ total|floatformat:2 }} [cite: 72, 73]</strong></span>
+      </div>
+
+      <div class="text-right mt-10">
+        <strong>MYSORE [cite: 74]</strong><br />
+        Page 2 of 2 [cite: 75]
+      </div>
+    </div>
+  </body>
+</html>
