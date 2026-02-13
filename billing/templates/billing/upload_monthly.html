@@ -1,14 +1,28 @@
-{% extends "base.html" %}
-{% block content %}
+{% extends "base.html" %} {% block content %}
+<div class="container">
 <h2>Upload Monthly Excel</h2>
 <form method="post" enctype="multipart/form-data" class="mt-3">
   {% csrf_token %}
   <div class="mb-3">
-    <input type="file" name="file" accept=".xlsx,.xls,.csv" required>
+    <label class="form-label"><strong>Bill Name</strong></label>
+    <input
+      type="text"
+      name="bill_name"
+      class="form-control"
+      placeholder="Example: jan-bill"
+      required
+    />
+    <small class="text-muted">
+      Bills uploaded will be grouped under this bill name
+    </small>
+  </div>
+
+  <div class="mb-3">
+    <input type="file" name="file" accept=".xlsx,.xls,.csv" required />
   </div>
   <button class="btn btn-success" type="submit">Upload & Process</button>
 </form>
 {% for m in messages %}
-  <div class="alert alert-info mt-3">{{ m }}</div>
-{% endfor %}
-{% endblock %}
+<div class="alert alert-info mt-3">{{ m }}</div>
+</div>
+{% endfor %} {% endblock %}

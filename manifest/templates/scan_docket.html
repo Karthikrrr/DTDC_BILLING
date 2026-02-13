@@ -1,5 +1,36 @@
 {% extends "base.html" %}
 {% block content %}
+<div class="container">
+
+
+<style>
+.autocomplete-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  max-height: 180px;
+  overflow-y: auto;
+  z-index: 1000;
+  display: none;
+}
+
+.autocomplete-item {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.autocomplete-item.active,
+.autocomplete-item:hover {
+  background-color: #f2f2f2;
+}
+</style>
+
+
+
 
 {% if error %}
 <div class="alert alert-danger">
@@ -32,20 +63,29 @@
 <form method="post">
   {% csrf_token %}
 
-  <div class="mb-3">
-    <label class="form-label">Company name</label>
-    <select name="company" class="form-select" required>
-      <option value="">Select Company</option>
-      {% for c in companies %}
-        <option value="{{ c.name }}">{{ c.name }}</option>
-      {% endfor %}
-    </select>
-  </div>
+<div class="mb-3 position-relative">
+  <label class="form-label">Company name</label>
+
+  <input
+    type="text"
+    id="company-input"
+    name="company"
+    class="form-control"
+    placeholder="Type company name"
+    autocomplete="off"
+    required
+  >
+
+  <div id="company-dropdown" class="autocomplete-list"></div>
+</div>
+
+
 
   <div class="mb-3">
     <label class="form-label">Docket Numbers (one per line)</label>
     <textarea
       name="docket_numbers"
+      id="docket_numbers"
       class="form-control"
       rows="8"
       autofocus
@@ -53,10 +93,186 @@
       required></textarea>
   </div>
 
+<div id="lbh-section">
+  <h4>VOLUMATRIC Details (L,B,H in inches)</h4>
+  <div id="lbh-inputs"></div>
+</div>
+
+<input type="hidden" name="lbh_json" id="lbh_json">
+
+
   <button class="btn btn-primary">Upload Dockets</button>
 </form>
 
 <br>
 
+<script>
+  const COMPANIES = [
+    {% for c in companies %}
+      "{{ c.name|escapejs }}",
+    {% endfor %}
+  ];
+</script>
 
+<script>
+const input = document.getElementById("company-input");
+const dropdown = document.getElementById("company-dropdown");
+
+let currentFocus = -1;
+let currentItems = [];
+
+/* ---------- INPUT SEARCH ---------- */
+input.addEventListener("input", function () {
+  const query = this.value.toLowerCase();
+
+  dropdown.innerHTML = "";
+  currentItems = [];
+  currentFocus = -1;
+
+  if (query.length < 1) {
+    dropdown.style.display = "none";
+    return;
+  }
+
+  const matches = COMPANIES
+    .filter(c => c.toLowerCase().includes(query))
+    .slice(0, 5);
+
+  if (!matches.length) {
+    dropdown.style.display = "none";
+    return;
+  }
+
+  matches.forEach(name => {
+    const item = document.createElement("div");
+    item.className = "autocomplete-item";
+    item.textContent = name;
+
+    item.addEventListener("mousedown", function (e) {
+      e.preventDefault(); // 🔴 IMPORTANT
+      input.value = name;
+      dropdown.style.display = "none";
+    });
+
+    dropdown.appendChild(item);
+    currentItems.push(item);
+  });
+
+  dropdown.style.display = "block";
+});
+
+/* ---------- KEYBOARD NAVIGATION ---------- */
+input.addEventListener("keydown", function (e) {
+  if (!currentItems.length || dropdown.style.display !== "block") return;
+
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    currentFocus++;
+    if (currentFocus >= currentItems.length) currentFocus = 0;
+    setActive();
+  }
+
+  else if (e.key === "ArrowUp") {
+    e.preventDefault();
+    currentFocus--;
+    if (currentFocus < 0) currentFocus = currentItems.length - 1;
+    setActive();
+  }
+
+  else if (e.key === "Enter") {
+    if (currentFocus > -1) {
+      e.preventDefault();
+      currentItems[currentFocus].dispatchEvent(new MouseEvent("mousedown"));
+    }
+  }
+});
+
+/* ---------- ACTIVE ITEM HANDLING ---------- */
+function setActive() {
+  removeActive();
+
+  if (currentFocus >= 0 && currentFocus < currentItems.length) {
+    const item = currentItems[currentFocus];
+    item.classList.add("active");
+    item.scrollIntoView({ block: "nearest" });
+  }
+}
+
+function removeActive() {
+  currentItems.forEach(item => item.classList.remove("active"));
+}
+
+/* ---------- CLOSE ON OUTSIDE CLICK ---------- */
+document.addEventListener("click", function (e) {
+  if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+    dropdown.style.display = "none";
+  }
+});
+</script>
+
+
+<script>
+function renderLBH(pieces) {
+  const container = document.getElementById("lbh-inputs");
+  container.innerHTML = "";
+
+  for (let i = 1; i <= pieces; i++) {
+    container.innerHTML += `
+      <div class="mb-2">
+        <label><strong>Piece ${i} (L,B,H)</strong></label>
+        <input
+          type="text"
+          class="form-control lbh-input"
+          data-piece="${i}"
+          placeholder="e.g. 20,30,40"
+        >
+      </div>
+    `;
+  }
+}
+
+function collectLBH() {
+  const data = [];
+
+  document.querySelectorAll(".lbh-input").forEach(el => {
+    const piece = parseInt(el.dataset.piece);
+    const value = el.value.trim();
+
+    let l = 0, b = 0, h = 0;
+
+    if (value) {
+      const parts = value.split(",");
+      if (parts.length === 3) {
+        l = parseFloat(parts[0]) || 0;
+        b = parseFloat(parts[1]) || 0;
+        h = parseFloat(parts[2]) || 0;
+      }
+    }
+
+    data.push({ piece, l, b, h });
+  });
+
+  document.getElementById("lbh_json").value = JSON.stringify(data);
+}
+
+// Fetch pieces when docket changes
+document.getElementById("docket_numbers").addEventListener("blur", function () {
+  const docket = this.value.trim().split("\n")[0];
+  if (!docket) return;
+
+  fetch(`/manifest/ajax/get-pieces/?docket=${docket}`)
+    .then(res => res.json())
+    .then(data => {
+      renderLBH(data.pieces);
+    });
+});
+
+// Always collect LBH before submit
+document.querySelector("form").addEventListener("submit", collectLBH);
+
+// Default render
+renderLBH(1);
+</script>
+
+</div>
 {% endblock %}
