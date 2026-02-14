@@ -324,7 +324,7 @@
             </tr>
             <tr>
               <td class="bold">Amount</td>
-              <td class="text-right bold">{{ total|floatformat:2|default:"00.0" }}</td>
+              <td class="text-right bold">{{ subtotal|floatformat:2|default:"00.0" }}</td>
             </tr>
             <tr>
               <td>Discount 0%</td>
@@ -332,15 +332,15 @@
             </tr>
             <tr>
               <td>Taxable Value</td>
-              <td class="text-right">{{ total|floatformat:2|default:"00.0" }}</td>
+              <td class="text-right">{{ subtotal|floatformat:2|default:"00.0" }}</td>
+            </tr>
+            <tr>
+              <td>SGST @ 8.0%</td>
+              <td class="text-right">{{ gst_amount|floatformat:2|default:"00.0" }}</td>
             </tr>
             <tr>
               <td>CGST @ 8.0%</td>
               <td class="text-right">{{ cgst_amount|floatformat:2|default:"00.0" }}</td>
-            </tr>
-            <tr>
-              <td>SGST @ 8.0%</td>
-              <td class="text-right">{{ sgst_amount|floatformat:2|default:"00.0" }}</td>
             </tr>
             <tr>
               <td>IGST @ 18.0%</td>
@@ -530,7 +530,7 @@
           <td colspan="2"></td>
           <td></td>
           <td colspan="4" class="text-right">Total</td>
-          <td class="text-right">{{ total|floatformat:2|default:"00.0" }}</td>
+          <td class="text-right">{{ subtotal|floatformat:2|default:"00.0" }}</td>
         </tr>
       </tbody>
     </table>
@@ -539,15 +539,11 @@
       <table class="calc-table">
         <tr>
           <td class="text-right">Sub Total 2</td>
-          <td class="text-right bold">{{ total|floatformat:2|default:"00.0" }}</td>
-        </tr>
-        <tr>
-          <td class="text-right">Taxable Value</td>
-          <td class="text-right">{{ total|floatformat:2|default:"00.0" }}</td>
+          <td class="text-right bold">{{ subtotal|floatformat:2|default:"00.0" }}</td>
         </tr>
         <tr>
           <td class="text-right">CGST @ 9.0%</td>
-          <td class="text-right">{{ cgst_amount|floatformat:2|default:"00.0" }}</td>
+          <td class="text-right">{{ gst_amount|floatformat:2|default:"00.0" }}</td>
         </tr>
         <tr>
           <td class="text-right">SGST @ 9.0%</td>
@@ -570,11 +566,6 @@
     </div>
 
     <div class="sticky-footer">
-      <div
-        style="display: flex; justify-content: space-between; font-size: 10px; font-weight: bold; margin-bottom: 2px;">
-        <span>Sub Total: &nbsp;&nbsp;&nbsp;&nbsp; {{ total|floatformat:2|default:"00.0" }}</span>
-        <span>Page Total: &nbsp;&nbsp;&nbsp;&nbsp; {{ total|floatformat:2|default:"00.0" }}</span>
-      </div>
       <div class="grey-footer-bar">
         <span>MYSORE</span>
       </div>

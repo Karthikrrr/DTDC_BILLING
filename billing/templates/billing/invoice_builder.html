@@ -117,9 +117,13 @@
             id="final_invoice_due_date"
           />
 
-          <input type="hidden" name="gst" id="final_gst" />
-          <input type="hidden" name="cgst" id="final_cgst" />
-          <input type="hidden" name="igst" id="final_igst" />
+          <input type="hidden" id="final_gst" name="gst" />
+          <input type="hidden" id="final_cgst" name="cgst" />
+          <input type="hidden" id="final_igst" name="igst" />
+
+          <input type="hidden" id="final_gst_amount" name="gst_amount" />
+          <input type="hidden" id="final_cgst_amount" name="cgst_amount" />
+          <input type="hidden" id="final_igst_amount" name="igst_amount" />
         </form>
 
         <!-- TABLE -->
@@ -296,7 +300,7 @@
         <!-- SUMMARY -->
         <div class="row summary-box mt-3">
           <div class="col-md-6">
-            <label>GST %</label>
+            <label>SGST %</label>
             <input
               type="number"
               id="gstPercent"
@@ -322,12 +326,13 @@
           </div>
 
           <div class="col-md-6">
-            <p>Subtotal: ₹ <span id="subtotal">0.00</span></p>
-            <p>Taxable Amount: ₹ <span id="taxable">0.00</span></p>
-            <p>GST Amount: ₹ <span id="gstAmount">0.00</span></p>
-            <p class="total-highlight">
+            <h5>Subtotal: ₹ <span id="subtotal">0.00</span></h5>
+            <h5>SGST Amount: ₹ <span id="gstAmount">0.00</span></h5>
+            <h5>CGST Amount: ₹ <span id="cgstAmount">0.00</span></h5>
+            <h5>IGST Amount: ₹ <span id="igstAmount">0.00</span></h5>
+            <h3 class="total-highlight">
               Grand Total: ₹ <span id="grandTotal">0.00</span>
-            </p>
+            </h3>
           </div>
         </div>
       </div>
@@ -379,6 +384,9 @@
           });
       }
 
+      let lastGstAmount = 0;
+      let lastCgstAmount = 0;
+      let lastIgstAmount = 0;
       function handleInvAmount(billId, rawValue) {
         rawValue = rawValue.toString().trim();
         updateCell(billId, "inv_amount", rawValue);
@@ -390,54 +398,79 @@
         });
       }
 
-      function calculateTotals() {
-        let subtotal = 0;
-        let totalFsc = 0;
-        let totalOda = 0;
 
-        document.querySelectorAll(".amount").forEach((el) => {
-          const v = Number(el.value);
-          if (!isNaN(v)) subtotal += v;
-        });
+  function calculateTotals() {
+    let subtotal = 0;
 
-        document.querySelectorAll(".fsc").forEach((el) => {
-          const v = Number(el.value);
-          if (!isNaN(v)) totalFsc += v;
-        });
+    // Subtotal = SUM of Amount column only
+    document.querySelectorAll(".amount").forEach((el) => {
+      const v = Number(el.value);
+      if (!isNaN(v)) subtotal += v;
+    });
 
-        document.querySelectorAll(".oda").forEach((el) => {
-          const v = Number(el.value);
-          if (!isNaN(v)) totalOda += v;
-        });
+    const gstPercent =
+      Number(document.getElementById("gstPercent").value) || 0;
+    const cgstPercent =
+      Number(document.getElementById("cgstPercent").value) || 0;
+    const igstPercent =
+      Number(document.getElementById("igstPercent").value) || 0;
 
-        const taxable = subtotal + totalFsc + totalOda;
+    const gstAmount = (subtotal * gstPercent) / 100;
+    const cgstAmount = (subtotal * cgstPercent) / 100;
+    const igstAmount = (subtotal * igstPercent) / 100;
 
-        const gstFlat =
-          Number(document.getElementById("gstPercent")?.value) || 0;
-        const cgst = Number(document.getElementById("cgstPercent")?.value) || 0;
-        const igst = Number(document.getElementById("igstPercent")?.value) || 0;
+    // Save for backend
+    lastGstAmount = gstAmount;
+    lastCgstAmount = cgstAmount;
+    lastIgstAmount = igstAmount;
 
-        let gstAmount = 0;
+    const grandTotal =
+      subtotal + gstAmount + cgstAmount + igstAmount;
 
-        if (igst > 0) gstAmount = (taxable * igst) / 100;
-        else if (cgst > 0) gstAmount = (taxable * (cgst * 2)) / 100;
-        else gstAmount = (taxable * gstFlat) / 100;
+    // UI update
+    document.getElementById("subtotal").innerText = subtotal.toFixed(2);
+    document.getElementById("gstAmount").innerText = gstAmount.toFixed(2);
+    document.getElementById("cgstAmount").innerText = cgstAmount.toFixed(2);
+    document.getElementById("igstAmount").innerText = igstAmount.toFixed(2);
+    document.getElementById("grandTotal").innerText = grandTotal.toFixed(2);
+  }
 
-        document.getElementById("subtotal").innerText = subtotal.toFixed(2);
-        document.getElementById("taxable").innerText = taxable.toFixed(2);
-        document.getElementById("gstAmount").innerText = gstAmount.toFixed(2);
-        document.getElementById("grandTotal").innerText = (
-          taxable + gstAmount
-        ).toFixed(2);
-      }
+  document.addEventListener("DOMContentLoaded", calculateTotals);
+
+
       function exportPDF() {
-        final_invoice_number.value = invoice_number.value || "";
-        final_invoice_date.value = invoice_date.value || "";
-        final_invoice_due_date.value = invoice_due_date.value || "";
-        final_gst.value = gstPercent.value || 0;
-        final_cgst.value = cgstPercent.value || 0;
-        final_igst.value = igstPercent.value || 0;
-        finalForm.submit();
+        calculateTotals(); // ensure latest values
+
+        document.getElementById("final_invoice_number").value =
+          document.getElementById("invoice_number").value || "";
+
+        document.getElementById("final_invoice_date").value =
+          document.getElementById("invoice_date").value || "";
+
+        document.getElementById("final_invoice_due_date").value =
+          document.getElementById("invoice_due_date").value || "";
+
+        // Percentages
+        document.getElementById("final_gst").value =
+          document.getElementById("gstPercent").value || 0;
+
+        document.getElementById("final_cgst").value =
+          document.getElementById("cgstPercent").value || 0;
+
+        document.getElementById("final_igst").value =
+          document.getElementById("igstPercent").value || 0;
+
+        // Calculated amounts
+        document.getElementById("final_gst_amount").value =
+          lastGstAmount.toFixed(2);
+
+        document.getElementById("final_cgst_amount").value =
+          lastCgstAmount.toFixed(2);
+
+        document.getElementById("final_igst_amount").value =
+          lastIgstAmount.toFixed(2);
+
+        document.getElementById("finalForm").submit();
       }
 
       document.addEventListener("DOMContentLoaded", calculateTotals);

@@ -318,8 +318,12 @@ def update_bill_data(request):
             fsc_percent = getattr(bill.company, "fsc_percent", 0) or 0
             bill.fsc_amount = round((base_amount * fsc_percent) / 100, 2)
 
+            # ✅ ACCUMULATIVE FORMULA
             bill.amount = round(
-                base_amount + float(bill.oda_charges or 0),
+                base_amount
+                + float(bill.fsc_amount or 0)
+                + float(bill.oda_charges or 0)
+                + float(bill.inv_amt_percent or 0),
                 2
             )
 
@@ -373,10 +377,13 @@ def update_bill_data(request):
         bill.fsc_amount = round((base_amount * fsc_percent) / 100, 2)
 
         # =========================
-        # 6️⃣ Final amount (Base + ODA)
+        # 6️⃣ FINAL AMOUNT (ACCUMULATIVE) ✅
         # =========================
         bill.amount = round(
-            base_amount + float(bill.oda_charges or 0),
+            base_amount
+            + float(bill.fsc_amount or 0)
+            + float(bill.oda_charges or 0)
+            + float(bill.inv_amt_percent or 0),
             2
         )
 
@@ -395,6 +402,7 @@ def update_bill_data(request):
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
 
 # ----------------------------------------
 #  Create New Bill (SESSION BASED - No DB updates)
@@ -608,19 +616,18 @@ def invoice_generate_final_pdf(request):
 
     company_id = request.POST.get("company_id")
     month = request.POST.get("month")
+    invoice_id = request.POST.get("invoice_id")
 
-    invoice_date = request.POST.get("invoice_date") or datetime.date.today()
-    invoice_no = request.POST.get("invoice_number") or "101-101"
+    invoice_no = request.POST.get("inv_no") or "101-101"
+    invoice_date = request.POST.get("inv_date") or datetime.date.today()
     invoice_due_date = request.POST.get("inv_due_date") or datetime.date.today()
 
-    gst_flat = Decimal(request.POST.get("gst", "0") or "0")
-    cgst = Decimal(request.POST.get("cgst", "0") or "0")
-    igst = Decimal(request.POST.get("igst", "0") or "0")
+    # Tax amounts from frontend
+    gst_amount = Decimal(request.POST.get("gst_amount", "0") or "0")
+    cgst_amount = Decimal(request.POST.get("cgst_amount", "0") or "0")
+    igst_amount = Decimal(request.POST.get("igst_amount", "0") or "0")
 
-    invoice_id = request.POST.get("invoice_id")
-
-    invoice_id = request.POST.get("invoice_id")
-
+    # Fetch bills
     if invoice_id:
         bills = Bill.objects.filter(invoice_id=invoice_id)
     else:
@@ -628,7 +635,6 @@ def invoice_generate_final_pdf(request):
 
     if not bills.exists():
         return HttpResponse("No bills found")
-
 
     company = bills.first().company
 
@@ -640,54 +646,51 @@ def invoice_generate_final_pdf(request):
         subtotal += Decimal(b.amount or 0)
         total_pieces += b.pieces or 0
         total_weight += Decimal(b.weight or 0)
-    
-    total_fsc = sum(b.fsc_amount for b in bills)
-    taxable_value = subtotal + total_fsc 
 
-    cgst_amount = Decimal("0.00")
-    sgst_amount = Decimal("0.00")
-    igst_amount = Decimal("0.00")
-
-    if igst > 0:
-        igst_amount = taxable_value * igst / 100
-    elif cgst > 0:
-        cgst_amount = taxable_value * cgst / 100
-        sgst_amount = cgst_amount
-    elif gst_flat > 0:
-        igst_amount = taxable_value * gst_flat / 100
+    # Subtotal itself is taxable
+    taxable_value = subtotal.quantize(Decimal("0.01"))
 
     grand_total = (
-        taxable_value + cgst_amount + sgst_amount + igst_amount
+        taxable_value + gst_amount + cgst_amount + igst_amount
     ).quantize(Decimal("0.01"))
 
     year, mon = month.split("-")
     period = f"01/{mon}/{year} To 30/{mon}/{year}"
 
-    html = render_to_string("billing/final_invoice_pdf.html", {
-        "company": company,
-        "bills": bills,
-        "invoice_no": invoice_no,
-        "invoice_date": invoice_date,
-        "period": period,
-        "inv_due_date" :invoice_due_date,
-        "total": subtotal,
-        "taxable_value": taxable_value,
+    html = render_to_string(
+        "billing/final_invoice_pdf.html",
+        {
+            "company": company,
+            "bills": bills,
 
-        "cgst_amount": cgst_amount,
-        "sgst_amount": sgst_amount,
-        "igst_amount": igst_amount,
+            "invoice_no": invoice_no,
+            "invoice_date": invoice_date,
+            "inv_due_date": invoice_due_date,
+            "period": period,
 
-        "grand_total": grand_total,
-        "total_in_words": _amount_to_words(grand_total),
+            "subtotal": taxable_value,
+            "gst_amount": gst_amount,
+            "cgst_amount": cgst_amount,
+            "igst_amount": igst_amount,
 
-        "total_pieces": total_pieces,
-        "total_weight": total_weight,
-    })
+            "grand_total": grand_total,
+            "total_in_words": _amount_to_words(grand_total),
 
-    pdf = HTML(string=html, base_url=request.build_absolute_uri()).write_pdf()
+            "total_pieces": total_pieces,
+            "total_weight": total_weight,
+        }
+    )
+
+    pdf = HTML(
+        string=html,
+        base_url=request.build_absolute_uri()
+    ).write_pdf()
 
     response = HttpResponse(pdf, content_type="application/pdf")
-    response["Content-Disposition"] = f'attachment; filename="Invoice_{company.name}_{month}.pdf"'
+    response["Content-Disposition"] = (
+        f'attachment; filename="Invoice_{company.name}_{month}.pdf"'
+    )
+
     return response
 
 @staff_member_required
