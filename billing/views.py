@@ -1,3 +1,4 @@
+import calendar
 import os
 import datetime
 import pandas as pd
@@ -619,8 +620,14 @@ def invoice_generate_final_pdf(request):
     invoice_id = request.POST.get("invoice_id")
 
     invoice_no = request.POST.get("inv_no") or "101-101"
-    invoice_date = request.POST.get("inv_date") or datetime.date.today()
     invoice_due_date = request.POST.get("inv_due_date") or datetime.date.today()
+
+    inv_date_str = request.POST.get("inv_date")
+
+    if inv_date_str:
+        invoice_date = datetime.datetime.strptime(inv_date_str, "%Y-%m-%d").date()
+    else:
+        invoice_date = datetime.date.today()
 
     # Tax amounts from frontend
     gst_amount = Decimal(request.POST.get("gst_amount", "0") or "0")
@@ -654,8 +661,14 @@ def invoice_generate_final_pdf(request):
         taxable_value + gst_amount + cgst_amount + igst_amount
     ).quantize(Decimal("0.01"))
 
-    year, mon = month.split("-")
-    period = f"01/{mon}/{year} To 30/{mon}/{year}"
+    year = invoice_date.year
+    month_num = invoice_date.month
+
+    start_date = datetime.date(year, month_num, 1)
+    last_day = calendar.monthrange(year, month_num)[1]
+    end_date = datetime.date(year, month_num, last_day)
+
+    period = f"{start_date.strftime('%d/%m/%Y')} To {end_date.strftime('%d/%m/%Y')}"
 
     html = render_to_string(
         "billing/final_invoice_pdf.html",
@@ -692,6 +705,8 @@ def invoice_generate_final_pdf(request):
     )
 
     return response
+
+
 
 @staff_member_required
 def generate_pdf(request):

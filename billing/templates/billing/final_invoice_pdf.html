@@ -312,7 +312,7 @@
             </tr>
             <tr>
               <td>Invoice Period</td>
-              <td class="text-right">{{ invoice_date|default:"01/09/2025 To 30/09/2025" }}</td>
+              <td class="text-right">{{ period|default:"01/09/2025 To 30/09/2025" }}</td>
             </tr>
             <tr>
               <td class="bold">Invoice No.</td>
@@ -369,7 +369,7 @@
       <strong>IFSC Code : IDFB0021003</strong><br>
       <strong>PAN No : HJOPS7184H</strong><br>
       <strong>MSME No :</strong><br>
-      <span style="color: red;">Payment Due Date : {{ inv_due_date|default:"19-Jan-2026" }}</span>
+      <span style="color: red;"> <strong> Payment Due Date :</strong> {{ inv_due_date|default:"19-Jan-2026" }}</span>
     </div>
 
     <div class="footer-notes">
@@ -389,9 +389,9 @@
       </div>
 
       <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px; padding: 0 2px;">
-        <span>Invoice No: {{ invoice_no|default:"HRS/25-26-100" }}</span>
-        <span>Date : {{ invoice_date|date:"d-M-Y"|default:"19-Jan-2026" }}</span>
-        <span>Client Name : <strong>{{ company.name }}</strong></span>
+        <span><strong>Invoice No:</strong> {{ invoice_no|default:"HRS/25-26-100" }}</span>
+        <span><strong>Date :</strong> {{ invoice_date|date:"d-M-Y"|default:"19-Jan-2026" }}</span>
+        <span><strong>Client Name :</strong> {{ company.name }}</span>
       </div>
 
       <table class="payment-table">
@@ -419,17 +419,17 @@
 
       <div style="display: flex; justify-content: space-between; font-size: 10px; margin-top: 5px;">
         <div style="line-height: 1.2;">
-          <strong> Remarks :</strong> <br>
+          <strong>Amount In Words:</strong> <br>
           <span style="font-size: 10px;">&lt;&lt; Scan &amp; Pay &gt;&gt;</span>
         </div>
         <div class="text-right" style="line-height: 1.5;">
-          <p class="bold" style="margin: 0;">Total: {{ total_in_words|default:"Thirty Four Thousand Four Hundred Twenty One Rupees Only" }}</p>
+          <p class="bold" style="margin: 0;">{{ total_in_words|default:"Thirty Four Thousand Four Hundred Twenty One Rupees Only" }}</p>
           <p style="margin: 5px 0 0 0;">For <strong>M.R.POINT</strong></p>
         </div>
       </div>
     </div>
 
-    <div class="dashed-separator"><span>M.R.POINT</span></div>
+    <div class="dashed-separator"><span> M.R.POINT</span></div>
     <div class="text-center bold" style="font-size: 11px;">BILL ACKNOWLEDGMENT</div>
 
     <div class="box-section">
