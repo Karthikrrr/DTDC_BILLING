@@ -167,7 +167,7 @@ def upload_monthly(request):
             base_segment = get_segment_from_pincode(pincode_df, pincode)
             segment = apply_segment_suffix(base_segment, docket, mode)
             price = get_price_by_segment_and_weight(cal_df, segment, weight)
-            amount = Decimal(price * pieces).quantize(Decimal("0.01")) if price else Decimal("0.00")
+            amount = Decimal(price).quantize(Decimal("0.01")) if price else Decimal("0.00")
             fsc_percent = Decimal(company.fsc_percent or 0)
             fsc_amount = (amount * fsc_percent / 100).quantize(Decimal("0.01"))
             docket = str(row[docket_col]).strip().upper()
@@ -189,7 +189,7 @@ def upload_monthly(request):
                         "manifest_weight": mani_weight,
                         "vol_weight": volum_weight,
                         "weight": weight,
-                        "amount": amount,
+                        "amount": amount + fsc_amount,
                         "fsc_amount": fsc_amount,
                         "mode": mode,
                         "doc_type":doc_typ
@@ -213,7 +213,7 @@ def upload_monthly(request):
                     manifest_weight=mani_weight,
                     vol_weight=volum_weight,
                     weight=weight,
-                    amount=amount,
+                    amount=amount + fsc_amount,
                     fsc_amount=fsc_amount,
                     mode=mode,
                     doc_type=doc_typ
@@ -287,9 +287,9 @@ def update_bill_data(request):
 
         bill = Bill.objects.get(id=bill_id)
 
-        # =========================
-        # 1️⃣ Handle editable fields
-        # =========================
+        # ============================
+        # 1️⃣ UPDATE EDITABLE FIELDS
+        # ============================
         if field == "pieces":
             bill.pieces = int(value or 0)
 
@@ -303,12 +303,12 @@ def update_bill_data(request):
             raw = str(value).strip()
 
             if "*" in raw:
-                base, percent = raw.split("*")
-                base = float(base)
-                percent = float(percent)
+                base, percent = raw.split("*", 1)
+                base = float(base or 0)
+                percent = float(percent or 0)
             else:
                 base = float(raw or 0)
-                percent = 3
+                percent = 3.0
 
             bill.inv_amount = base
             bill.inv_amt_percent = round((base * percent) / 100, 2)
@@ -316,13 +316,12 @@ def update_bill_data(request):
         elif field == "amount":
             base_amount = float(value or 0)
 
-            fsc_percent = getattr(bill.company, "fsc_percent", 0) or 0
+            fsc_percent = float(getattr(bill.company, "fsc_percent", 0) or 0)
             bill.fsc_amount = round((base_amount * fsc_percent) / 100, 2)
 
-            # ✅ ACCUMULATIVE FORMULA
             bill.amount = round(
                 base_amount
-                + float(bill.fsc_amount or 0)
+                + bill.fsc_amount
                 + float(bill.oda_charges or 0)
                 + float(bill.inv_amt_percent or 0),
                 2
@@ -341,15 +340,15 @@ def update_bill_data(request):
         elif field != "__recalculate__":
             setattr(bill, field, value)
 
-        # =========================
-        # 2️⃣ Reload engines
-        # =========================
+        # ============================
+        # 2️⃣ LOAD CALCULATION ENGINES
+        # ============================
         cal_df = load_cal_df(bill.company.rule_file.path)
         pincode_df = load_latest_pincode_df(PincodeFile)
 
-        # =========================
-        # 3️⃣ Segment calculation
-        # =========================
+        # ============================
+        # 3️⃣ SEGMENT CALCULATION
+        # ============================
         base_segment = get_segment_from_pincode(
             pincode_df, bill.pincode
         )
@@ -360,29 +359,37 @@ def update_bill_data(request):
             bill.mode
         )
 
-        # =========================
-        # 4️⃣ Base amount calculation
-        # =========================
+        # ============================
+        # 4️⃣ CHARGEABLE WEIGHT
+        # ============================
+        chargeable_weight = max(
+            float(bill.weight or 0),
+            float(bill.vol_weight or 0)
+        )
+
+        # ============================
+        # 5️⃣ BASE AMOUNT
+        # ============================
         price = get_price_by_segment_and_weight(
             cal_df,
             bill.segment,
-            bill.weight
+            chargeable_weight
         )
 
-        base_amount = round(price * bill.pieces, 2) if price else 0
+        base_amount = round(price, 2) if price else 0.0
 
-        # =========================
-        # 5️⃣ FSC calculation
-        # =========================
-        fsc_percent = getattr(bill.company, "fsc_percent", 0) or 0
+        # ============================
+        # 6️⃣ FSC CALCULATION (BASE ONLY)
+        # ============================
+        fsc_percent = float(getattr(bill.company, "fsc_percent", 0) or 0)
         bill.fsc_amount = round((base_amount * fsc_percent) / 100, 2)
 
-        # =========================
-        # 6️⃣ FINAL AMOUNT (ACCUMULATIVE) ✅
-        # =========================
+        # ============================
+        # 7️⃣ FINAL AMOUNT (ACCUMULATIVE)
+        # ============================
         bill.amount = round(
             base_amount
-            + float(bill.fsc_amount or 0)
+            + bill.fsc_amount
             + float(bill.oda_charges or 0)
             + float(bill.inv_amt_percent or 0),
             2
