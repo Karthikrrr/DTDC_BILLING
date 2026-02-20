@@ -1,375 +1,408 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <style>
-      @page {
-        size: A4;
-        margin: 0.5cm;
-      }
-      body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 20px;
-        font-size: 10px;
-        line-height: 1.2;
-      }
-      .header {
-        text-align: center;
-        margin-bottom: 15px;
-        display: flex; /* Use flexbox for horizontal alignment */
-        justify-content: space-between; /* Space out logo and text */
-        align-items: center; /* Vertically align items */
-        padding: 0 10px; /* Small padding inside header */
-      }
-      .header-info {
-        flex-grow: 1; /* Allows info to take up central space */
-        text-align: center;
-        margin: 0 10px; /* Spacing between logo and text */
-      }
-      .header h1 {
-        font-size: 16px;
-        font-weight: bold;
-        margin: 0 0 2px 0;
-      }
-      .header .subtitle {
-        font-size: 12px;
-        margin: 0 0 5px 0;
-      }
-      .address {
-        text-align: center;
-        margin-bottom: 2px;
-        font-size: 10px;
-      }
-      .logo {
-        margin-left: 10px;
-        max-width: 200px; /* Control image size */
-        height: auto;
-        display: block;
-      }
-      .empty-spacer {
-        width: 150px; /* Reserves space to balance the header if needed */
-      }
-      .invoice-label {
-        text-align: center;
-        font-weight: bold;
-        margin-bottom: 10px;
-        font-size: 14px;
-      }
-      .main-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 15px;
-        font-size: 10px;
-      }
-      .main-table td {
-        border: 1px solid #000;
-        padding: 6px 8px;
-        vertical-align: top;
-      }
-      .billed-to {
-        width: 40%;
-      }
-      .tax-table {
-        width: 100%;
-        border-collapse: collapse;
-        border: 1px solid #000;
-      }
-      /* ... (Remaining CSS styles from the previous turn) ... */
-      .tax-table td {
-        padding: 2px 5px;
-        border: 1px solid #000;
-        text-align: left;
-      }
-      .tax-table td:last-child {
-        text-align: right;
-      }
-      .tax-table tr:last-child td {
-        font-weight: bold;
-      }
-      .service-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 10px 0;
-        font-size: 10px;
-      }
-      .bank-details {
-        margin: 10px 0;
-        line-height: 1.5;
-      }
-      .footer-notes {
-        margin: 10px 0;
-        font-size: 9px;
-        line-height: 1.5;
-      }
-      .payment-advice {
-        border: 2px solid #000;
-        padding: 10px;
-        margin: 15px 0;
-      }
-      .payment-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 10px 0;
-        font-size: 10px;
-      }
-      .payment-table th,
-      .payment-table td {
-        border: 1px solid #000;
-        padding: 5px;
-        text-align: center;
-      }
-      .payment-table th {
-        background-color: #f0f0f0;
-        font-weight: bold;
-      }
-      .acknowledgment {
-        border: 2px solid #000;
-        padding: 10px;
-        margin: 15px 0;
-        font-size: 10px;
-      }
-      .ack-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 5px;
-      }
-      .ack-table td {
-        border: 1px solid #000;
-        padding: 8px;
-        vertical-align: middle;
-      }
-      .summary-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 9px;
-        margin: 10px 0;
-        table-layout: fixed;
-      }
-      .summary-table th,
-      .summary-table td {
-        border: 1px solid #000;
-        padding: 4px 3px;
-        text-align: center;
-        word-wrap: break-word;
-      }
-      .totals-table {
-        width: 40%;
-        margin-left: auto;
-        border-collapse: collapse;
-        font-size: 10px;
-      }
-      .totals-table td {
-        border: 1px solid #000;
-        padding: 4px 8px;
-      }
-      .totals-table .label {
-        width: 60%;
-        font-weight: bold;
-      }
-      .totals-table .value {
-        width: 40%;
-        text-align: right;
-        font-weight: bold;
-      }
-      .page-break {
-        page-break-before: always;
-      }
-      .bold {
-        font-weight: bold;
-      }
-      .text-right {
-        text-align: right;
-      }
-      .text-center {
-        text-align: center;
-      }
-      .border-bottom {
-        border-bottom: 1px solid #000;
-      }
-      .mt-10 {
-        margin-top: 10px;
-      }
-      .mb-10 {
-        margin-bottom: 10px;
-      }
-      .amount-highlight {
-        font-weight: bold;
-        font-size: 11px;
-      }
-      .summary-totals {
-        text-align: right;
-        font-size: 10px;
-        margin-top: 10px;
-      }
-      .summary-totals span {
-        margin-left: 20px;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="header">
-      <img
-          src="https://karthikr.great-site.net/dtdc.png"
-          alt="DTDC"
-          class="logo"
-      />
-      
-      <div class="header-info">
-        <div class="bold" style="font-size: 16px;">HARSHITA INTERNATIONAL</div>
-        <div class="subtitle">(Domestic and International Courier Service)</div>
-        <div class="address">SHOP NUMBER-77 1ST FLOOR SECTOR 17 HUDA MARKET [cite: 3]</div>
-        <div class="address">GURGAON HARYANA 122001 [cite: 3]</div>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Invoice - Harshita International</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #000;
+      -webkit-print-color-adjust: exact;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 10mm;
+      margin: auto;
+      background: white;
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    .page-break {
+      page-break-after: always;
+    }
+
+    /* PAGE 1 STYLES */
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 5px;
+    }
+
+    .company-info h1 {
+      font-size: 22px;
+      margin: 0;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+
+    .company-info p {
+      margin: 2px 0;
+      font-size: 11px;
+    }
+
+    .logo-box img {
+      width: 190px;
+      height: auto;
+    }
+
+    .contact-line {
+      text-align: right;
+      font-weight: bold;
+      margin-bottom: 5px;
+      font-size: 11px;
+    }
+
+    .invoice-title {
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      margin: 10px 0;
+      text-decoration: underline;
+    }
+
+    .main-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+    }
+
+    .main-table td {
+      border: 1px solid #000;
+      vertical-align: top;
+      padding: 5px;
+      font-size: 11px;
+    }
+
+    .tax-summary-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .tax-summary-table td {
+      border: 1px solid #000;
+      padding: 3px 8px;
+    }
+
+    .text-right {
+      text-align: right;
+    }
+
+    .bold {
+      font-weight: bold;
+    }
+
+    .service-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      margin: 10px 0;
+    }
+
+    .bank-details {
+      font-size: 11px;
+      line-height: 1.4;
+      margin-bottom: 10px;
+    }
+
+    .footer-notes {
+      font-size: 10px;
+      line-height: 1.3;
+    }
+
+    /* Payment Advice & Acknowledgment */
+    .box-section {
+      border: 1px solid #000;
+      padding: 8px;
+      margin-top: 10px;
+    }
+
+    .payment-table {
+      width: 100%;
+      border-collapse: separate;
+      /* Required for spacing between boxes */
+      border-spacing: 2px 0;
+      /* Horizontal spacing between boxes */
+      margin: 5px 0;
+    }
+
+    .payment-table th {
+      border: 1px solid #000;
+      padding: 4px 2px;
+      font-size: 10px;
+      font-weight: bold;
+      text-align: center;
+      background: #fff;
+      /* White background as per image */
+    }
+
+    .payment-table td {
+      border: 1px solid #000;
+      height: 30px;
+      /* Increased height for the input area */
+      text-align: center;
+      vertical-align: middle;
+      font-size: 11px;
+    }
+
+    .dashed-separator {
+      border-top: 2px dashed #000;
+      margin: 20px 0 10px 0;
+      position: relative;
+      text-align: center;
+    }
+
+    .dashed-separator span {
+      position: absolute;
+      top: -10px;
+      background: #fff;
+      padding: 0 10px;
+      font-weight: bold;
+      left: 35%;
+    }
+
+    .ack-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 5px;
+    }
+
+    .ack-table td {
+      border: 1px solid #000;
+      padding: 5px;
+      font-size: 10px;
+      vertical-align: top;
+    }
+
+    /* PAGE 2 STYLES */
+    .summary-header-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .summary-title {
+      text-align: center;
+      font-size: 14px;
+      color: #777;
+    }
+
+    .summary-comp-name {
+      text-align: right;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .summary-data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
+    }
+
+    .summary-data-table th {
+      background-color: #7ba7c7;
+      color: white;
+      padding: 5px;
+      font-weight: normal;
+      border: 1px solid #7ba7c7;
+    }
+
+    .summary-data-table td {
+      padding: 4px;
+      border: none;
+    }
+
+    .border-y-heavy {
+      border-top: 2px solid #000;
+      border-bottom: 2px solid #000;
+    }
+
+    .calc-wrapper {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 5px;
+    }
+
+    .calc-table {
+      width: 45%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    .calc-table td {
+      padding: 2px 5px;
+    }
+
+    .peach-bg {
+      background-color: #fce4d6;
+      font-weight: bold;
+      border-top: 1px solid #000;
+      border-bottom: 1px solid #000;
+    }
+
+    .sticky-footer {
+      position: absolute;
+      bottom: 10mm;
+      width: 190mm;
+    }
+
+    .grey-footer-bar {
+      background-color: #d9d9d9;
+      padding: 4px 10px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      font-weight: bold;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="page page-break">
+    <div class="header-container">
+      <div class="company-info">
+        <h1>M.R POINT</h1>
+        <p>( Domestic and International Courier Service )</p>
+        <p>NO. 240/1 , 5TH CROSS , RATHNA JAYRAM COMPLEX , VIJAYNAGAR</p>
+        <p>SURYA BAKERY CIRCLE, HEBBAL, MYSORE - 570016</p>
       </div>
-      
-      <div class="empty-spacer"></div>
+      <div class="logo-box">
+        <img src="https://karthikr.great-site.net/dtdc.png" alt="DTDC Logo">
+      </div>
     </div>
 
-    <div class="text-right bold mb-10" style="margin-right: 5px;">
-        <span style="float: left; margin-left: 5px;">ORIGINAL FOR RECIPIENT [cite: 5]</span>
-        Email ID: bheemnagar.ggr@fr.dtdc.com [cite: 4]
+    <div class="contact-line">
+      <span style="float: left;">ORIGINAL FOR RECIPIENT</span>
+      Email ID : <a href="mailto:hebbal.blr@fr.dtdc.com">hebbal.blr@fr.dtdc.com</a>
     </div>
 
-    <div class="invoice-label">TAX INVOICE [cite: 13]</div>
+    <div class="invoice-title">TAX INVOICE</div>
 
     <table class="main-table">
       <tr>
-        <td class="billed-to">
-          <div class="detail-row">
-            <strong style="font-size: 11px;">Details of Receiver | Billed to: [cite: 6]</strong>
-          </div>
-          <div class="detail-row bold" style="margin-top: 5px;">{{ company }} [cite: 7]</div>
-          <div class="detail-row">
-            FIRST FLOOR, NO.240/1, R J COMPLEX SURYA BAKERY CIRCLE, HEBBAL,
-            MYSORE, Mysuru, Karnataka, 570016 [cite: 8]
-          </div>
-          <div class="detail-row"> <strong> GST No: </strong> {{ gst }} [cite: 9]</div>
-          <div class="detail-row">PO Number : [cite: 10]</div>
-          <div class="detail-row">State: Karnataka [cite: 11]</div>
-          <div class="detail-row">
-            Place of supply (State Name & Code): Karnataka & 29 [cite: 12]
-          </div>
+        <td style="width: 55%;">
+          <p class="bold">Details of Receiver | Billed to:</p>
+          <p class="bold" style="font-size: 10px; margin: 4px 0;">{{ company.name }}</p>
+          <p>{{ company.address }}</p>
+          <p style="margin-top:10px;"><strong>GST No:</strong> {{ company.gst_no }}</p>
+          <p><strong>PO Number :</strong> </p>
+          <p><strong>State:</strong> Karnataka</p>
+          <p><strong>Place of supply:</strong> Karnataka & 29</p>
         </td>
-        <td class="">
-          <table class="tax-table" width="100%">
+        <td style="width: 45%; padding: 0;">
+          <table class="tax-summary-table">
             <tr>
-              <td><strong>GST Number</strong></td>
-              <td class="text-right">06HJOPS7184H1ZC [cite: 14]</td>
+              <td class="bold">GST Number</td>
+              <td class="text-right">29ANSPV4241P2ZU</td>
             </tr>
             <tr>
-              <td><strong>Invoice Period</strong></td>
-              <td class="text-right">{{ period }} [cite: 14]</td>
+              <td>Invoice Period</td>
+              <td class="text-right">{{ period|default:"01/09/2025 To 30/09/2025" }}</td>
             </tr>
             <tr>
-              <td><strong>Invoice No.</strong></td>
-              <td class="text-right amount-highlight">{{ invoice_no }} [cite: 14]</td>
+              <td class="bold">Invoice No.</td>
+              <td class="text-right bold">{{ invoice_no|default:"HRS/25-26-100" }}</td>
             </tr>
             <tr>
-              <td><strong>Invoice Date</strong></td>
-              <td class="text-right amount-highlight">{{ invoice_date|date:"d-M-Y" }} [cite: 14]</td>
+              <td class="bold">Invoice Date</td>
+              <td class="text-right bold">{{ invoice_date|date:"d-M-Y"|default:"01-Oct-2025" }}</td>
             </tr>
             <tr>
-              <td><strong>Amount</strong></td>
-              <td class="text-right amount-highlight">{{ total|floatformat:2 }} [cite: 14]</td>
+              <td class="bold">Amount</td>
+              <td class="text-right bold">{{ subtotal|floatformat:2|default:"00.0" }}</td>
             </tr>
             <tr>
-              <td><strong>Discount 0%</strong></td>
-              <td class="text-right">0.00 [cite: 14]</td>
+              <td>Discount 0%</td>
+              <td class="text-right">0.00</td>
             </tr>
             <tr>
-              <td><strong>Fuel Surcharge</strong></td>
-              <td class="text-right">0.00 [cite: 14]</td>
+              <td>Taxable Value</td>
+              <td class="text-right">{{ subtotal|floatformat:2|default:"00.0" }}</td>
             </tr>
             <tr>
-              <td><strong>Taxable Value</strong></td>
-              <td class="text-right">{{ total|floatformat:2 }} [cite: 14]</td>
+              <td>SGST @ 8.0%</td>
+              <td class="text-right">{{ gst_amount|floatformat:2|default:"00.0" }}</td>
             </tr>
             <tr>
-              <td><strong>CGST @ 0.0%</strong></td>
-              <td class="text-right">0.00 [cite: 14]</td>
+              <td>CGST @ 8.0%</td>
+              <td class="text-right">{{ cgst_amount|floatformat:2|default:"00.0" }}</td>
             </tr>
             <tr>
-              <td><strong>SGST @ 0.0%</strong></td>
-              <td class="text-right">0.00 [cite: 14]</td>
+              <td>IGST @ 18.0%</td>
+              <td class="text-right">{{ igst_amount|floatformat:2|default:"00.0" }}</td>
             </tr>
             <tr>
-              <td><strong>IGST @ {{ igst_percent }}%</strong></td>
-              <td class="text-right">{{ igst_amount|floatformat:2 }} [cite: 14]</td>
-            </tr>
-            <tr>
-              <td><strong>Grand Total (Round-off)</strong></td>
-              <td class="text-right amount-highlight">{{ grand_total|floatformat:2 }} [cite: 14]</td>
+              <td class="bold">Grand Total</td>
+              <td class="text-right bold" style="font-size: 13px;">{{ grand_total|floatformat:2|default:"00.0" }}
+              </td>
             </tr>
           </table>
         </td>
       </tr>
     </table>
 
-    <div class="mt-10">
-      <div style="float: right;">SAC: 996812 [cite: 17]</div>
-      <strong>Tax subject to reverse charge</strong> [cite: 18] &nbsp;&nbsp; YES [cite: 15] &nbsp;&nbsp; NO [cite: 16]
-      <div style="clear: both;"></div>
+    <div class="service-row">
+      <div>Tax subject to reverse charge: &nbsp;&nbsp; YES &nbsp;&nbsp; <span
+          style="text-decoration: line-through;">NO</span></div>
+      <div>SAC: 9968&nbsp;&nbsp; State: KARNATAKA &nbsp;&nbsp; Code: 06</div>
     </div>
 
-    <div class="service-table">
-      <div><strong>Description of Service:</strong> Courier Services [cite: 19, 20]</div>
-      <div class="bank-details">
-        <strong>Bank Name:</strong> IDFC FIRST BANK [cite: 21]<br />
-        <strong>Account No:</strong> 75330745316 [cite: 22]<br />
-        <strong>IFSC Code:</strong> IDFB0021003 [cite: 23]<br />
-        <strong>PAN No:</strong> HJOPS7184H [cite: 24]<br />
-        <strong>State:</strong> Haryana [cite: 25] &nbsp;&nbsp; <strong>Code:</strong> 06 [cite: 26]<br />
-        <strong>MSME No:</strong> [cite: 27]<br />
-        <strong>Payment Due Date:</strong> [cite: 28]
-      </div>
+    <div class="bank-details">
+      <strong>Description of Service :</strong> Courier Services<br>
+      <strong>Bank Name : IDFC FIRST BANK</strong><br>
+      <strong>Account No : 75330745316</strong><br>
+      <strong>IFSC Code : IDFB0021003</strong><br>
+      <strong>PAN No : HJOPS7184H</strong><br>
+      <strong>MSME No :</strong><br>
+      <span style="color: red;"> <strong> Payment Due Date :</strong> {{ inv_due_date|default:"19-Jan-2026" }}</span>
     </div>
 
     <div class="footer-notes">
-      <div>
-        Please pay by Cheque/Draft favouring M/s
-        <strong>HARSHITA INTERNATIONAL [cite: 29, 30]</strong>
-      </div>
-      <div>Late payments are subject to an interest charged @ 10% p.a. [cite: 31]</div>
-      <div>
-        While making the payments, please handover the payment advice with full
-        details. [cite: 32]
-      </div>
-      <div>All dispute are subject to gurgaon Jurisdiction. [cite: 33]</div>
-      <div>
-        Any mistake / correction found in the Invoice has to be reported in
-        writing 7-working days from the receipt of the invoice. [cite: 34]
-      </div>
-      <div class="mt-10">
-        <strong
-          >THIS IS A COMPUTER GENRATED INVOICE & DOES NOT REQUIRE ANY
-          SIGNATURES. [cite: 35]</strong
-        >
-      </div>
+      <p>Please pay by Cheque/Draft favouring M/s &nbsp;&nbsp; <strong>M.R POINT</strong></p>
+      <p>Late payments are subject to an interest charged @ 10% p.a.<br>
+        While making the payments, please handover the payment advice with full details.<br>
+        All dispute are subject to Karnataka Jurisdiction.<br>
+        Any mistake / correction found in the Invoice has to be reported in writing 7-working days from the receipt of
+        the invoice.</p>
+      <p class="bold" style="margin-top: 5px;">THIS IS A COMPUTER GENRATED INVOICE & DOES NOT REQUIRE ANY SIGNATURES.
+      </p>
     </div>
 
-    <div class="border-bottom mt-10 mb-10" style="border-width: 2px;"></div>
-
-    <div class="payment-advice">
-      <div class="text-center bold">
-        Payment Advice (Please detach and return with your payment) [cite: 36]
+    <div class="box-section">
+      <div style="border-bottom: 2px solid #000; margin-bottom: 5px; padding-bottom: 2px;">
+        <strong style="font-size: 14px;">Payment Advice (Please detach and return with your payment)</strong>
       </div>
 
-      <div style="display: flex; justify-content: space-between; margin: 10px 0; font-size: 10px;">
-        <div><strong>Date:</strong> {{ invoice_date|date:"d-M-Y" }} [cite: 37]</div>
-        <div><strong>Invoice No:</strong> {{ invoice_no }} [cite: 38]</div>
-        <div><strong>Client Name:</strong> M.R.POINT [cite: 42]</div>
+      <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px; padding: 0 2px;">
+        <span><strong>Invoice No:</strong> {{ invoice_no|default:"HRS/25-26-100" }}</span>
+        <span><strong>Date :</strong> {{ invoice_date|date:"d-M-Y"|default:"19-Jan-2026" }}</span>
+        <span><strong>Client Name :</strong> {{ company.name }}</span>
       </div>
 
       <table class="payment-table">
         <thead>
           <tr>
-            <th>Name of Bank [cite: 39]</th>
-            <th>Cheque/ DD Number [cite: 39]</th>
-            <th>Cheque/ DD Date [cite: 39]</th>
-            <th>Invoice Amount(Rs.) [cite: 39]</th>
-            <th>TDS(Rs.) [cite: 39]</th>
-            <th>Net Amount (Rs.) [cite: 39]</th>
+            <th style="width: 12%;">Name of Bank</th>
+            <th style="width: 18%;">Cheque/ DD Number</th>
+            <th style="width: 15%;">Cheque/ DD Date</th>
+            <th style="width: 18%;">Invoice Amount(Rs.)</th>
+            <th style="width: 9%;">TDS(Rs.)</th>
+            <th style="width: 15%;">Net Amount(Rs.)</th>
           </tr>
         </thead>
         <tbody>
@@ -377,168 +410,168 @@
             <td></td>
             <td></td>
             <td></td>
-            <td class="bold">{{ grand_total|floatformat:2 }} [cite: 39]</td>
+            <td class="bold">{{ grand_total|floatformat:2|default:"34421.00" }}</td>
             <td></td>
             <td></td>
           </tr>
         </tbody>
       </table>
 
-      <div style="font-size: 10px;">
-        <div>Remarks : [cite: 40]</div>
-        <div><< Scan & Pay>> [cite: 41]</div>
-      </div>
-
-
-      <div class="text-right mt-10">
-        <div class="bold" style="float: left;">Total: {{ total_in_words }} [cite: 43]</div>
-        For <strong>HARSHITA INTERNATIONAL [cite: 43]</strong>
-        <div style="clear: both;"></div>
+      <div style="display: flex; justify-content: space-between; font-size: 10px; margin-top: 5px;">
+        <div style="line-height: 1.2;">
+          <strong>Amount In Words:</strong> <br>
+          <span style="font-size: 10px;">&lt;&lt; Scan &amp; Pay &gt;&gt;</span>
+        </div>
+        <div class="text-right" style="line-height: 1.5;">
+          <p class="bold" style="margin: 0;">{{ total_in_words|default:"Thirty Four Thousand Four Hundred Twenty One Rupees Only" }}</p>
+          <p style="margin: 5px 0 0 0;">For <strong>M.R.POINT</strong></p>
+        </div>
       </div>
     </div>
 
-    <div class="acknowledgment">
-      <div class="text-center bold">HARSHITA INTERNATIONAL [cite: 50]</div>
-      <div class="text-center bold">BILL ACKNOWLEDGMENT [cite: 50]</div>
+    <div class="dashed-separator"><span> M.R.POINT</span></div>
+    <div class="text-center bold" style="font-size: 11px;">BILL ACKNOWLEDGMENT</div>
 
-      <div style="display: flex; justify-content: space-between; margin-top: 5px; font-size: 10px;">
-        <div class="bold">{{ invoice_no }} [cite: 51]</div>
-        <div class="bold">Invoice Date: {{ invoice_date|date:"d-M-Y" }} [cite: 52]</div>
-        <div class="bold">Amount(INR) [cite: 53]</div>
-        <div class="bold">{{ grand_total|floatformat:2 }} [cite: 54]</div>
+    <div class="box-section">
+      <div style="display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 5px;">
+        <span>Client Code: <strong>MYSORE</strong></span>
+        <span><strong>{{ invoice_no|default:"HRS/25-26-100" }}</strong></span>
+        <span>Invoice Date: {{ invoice_date|date:"d-M-Y"|default:"01-Oct-2025" }}</span>
+        <span>Amount(INR) &nbsp; <strong>{{ grand_total|floatformat:2|default:"00.0" }}</strong></span>
       </div>
-
-      <table class="ack-table" style="margin-top: 10px;">
+      <table class="ack-table">
         <tr>
-          <td style="width: 15%;"><strong>Client Code:</strong> [cite: 44]</td>
-          <td style="width: 35%;">MYSORE [cite: 44]</td>
-          <td style="width: 15%;"><strong>Client Name:</strong> [cite: 46]</td>
-          <td style="width: 35%;">M.R.POINT [cite: 47]</td>
-        </tr>
-        <tr>
-          <td>Name of the Receiver [cite: 48]</td>
-          <td></td>
-          <td>Received Date [cite: 49]</td>
-          <td></td>
-        </tr>
-        <tr>
-          <td colspan="2" class="text-center">
-            <strong style="float: left;">{{ invoice_no }} [cite: 45]</strong>
-            <strong style="float: right;">Client Name: M.R.POINT [cite: 47]</strong>
-          </td>
-          <td colspan="2" class="text-right">Sign & Seal [cite: 55]</td>
+          <td style="width: 60%;"><strong>Client Name:</strong><strong>{{ company.name }}</strong><br><br><strong> Name of the Receiver:</strong><br><br>
+           <strong> Recieved Date:</strong></td>
+          <td class="text-center"><br><br><br><strong>Sign & Seal</strong></td>
         </tr>
       </table>
     </div>
+  </div>
 
-    <div class="page-break"></div>
+  <div class="page">
+    <div class="summary-header-grid">
+      <div></div>
+      <div class="summary-title">SUMMARY</div>
+      <div class="summary-comp-name">M.R.POINT</div>
+    </div>
 
-    <div class="summary-section">
-      <div class="summary-header">
-        <h2>SUMMARY [cite: 56]</h2>
-        <div><strong>HARSHITA INTERNATIONAL [cite: 57]</strong></div>
-        <div>To: M.R.POINT [cite: 58, 59]</div>
+    <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 10px;">
+      <div class="bold">To,<br>&nbsp;&nbsp;&nbsp;{{ company.name }}</div>
+      <div class="text-right">
+        <strong> Invoice No :</strong> &nbsp; {{ invoice_no|default:"HRS/25-26-100" }}<br>
+       <strong> Invoice Date :</strong> &nbsp; {{ invoice_date|date:"d-M-Y"|default:"01-Oct-2025" }}<br>
+        From &nbsp;01-Sep-2025&nbsp;To&nbsp;30-Sep-2025
       </div>
+    </div>
 
-      <div style="margin-bottom: 10px; font-size: 10px;">
-        <strong>Invoice No:</strong> {{ invoice_no }} [cite: 60] &nbsp;&nbsp;&nbsp;
-        <strong>Invoice Date:</strong> {{ invoice_date|date:"d-M-Y" }} [cite: 60]
-        &nbsp;&nbsp;&nbsp; <strong>From</strong> {{ from_date|date:"d-Sep-2025" }} [cite: 60]
-        <strong>To</strong> {{ to_date|date:"d-Sep-2025" }} [cite: 60]
-      </div>
+    <table class="summary-data-table">
+      <thead>
+        <tr>
+          <th>SNo</th>
+          <th>Awb No.</th>
+          <th>Date</th>
+          <th>Destination</th>
+          <th>Mode</th>
+          <th>Invoice Amt</th>
+          <th>Invoice Amt(0.3%)</th>
+          <th>Pcs</th>
+          <th>Doc Type</th>
+          <th>Weight</th>
+          <th>FSC</th>
+          <th>ODA charges</th>
+          <th class="text-right">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for bill in bills %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td>{{ bill.docket_no }}</td>
+          <td>{{ bill.date|date:"j/n/y" }}</td>
+          <td>{{ bill.destination }}</td>
+          <td>{{ bill.mode|default:"NONE" }}</td>
+          <td>{{ bill.inv_amount }}</td>
+          <td>{{ bill.inv_amt_percent }} </td>
+          <td style="text-align: center;">{{ bill.pieces }}</td>
+          <td>{{ bill.doc_type }}</td>
+          <td style="text-align: right;">{{ bill.weight|floatformat:3 }}</td>
+          <td>{{ bill.fsc_amount }}</td>
+          <td>{{ bill.oda_charges }}</td>
+          <td class="text-right">{{ bill.amount|floatformat:2 }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td>1</td>
+          <td>Z63698550</td>
+          <td>04-Sep-25</td>
+          <td>GGN</td>
+          <td>ALLAHABAD</td>
+          <td>UP</td>
+          <td style="text-align: center;">1</td>
+          <td style="text-align: right;">4.000 N</td>
+          <td class="text-right">600.00</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>G93144342</td>
+          <td>06-Sep-25</td>
+          <td>GGN</td>
+          <td>CHANDIGARH</td>
+          <td>CH</td>
+          <td style="text-align: center;">10</td>
+          <td style="text-align: right;">190.000 N</td>
+          <td class="text-right">3567.80</td>
+        </tr>
+        {% endfor %}
+        <tr class="border-y-heavy bold">
+          <td colspan="2">Total Awb= {{ bills|length|default:"0" }}</td>
+          <td colspan="2">Total Pcs = {{ total_pieces|default:"00" }}</td>
+          <td colspan="2"></td>
+          <td></td>
+          <td colspan="4" class="text-right">Total</td>
+          <td class="text-right">{{ subtotal|floatformat:2|default:"00.0" }}</td>
+        </tr>
+      </tbody>
+    </table>
 
-      <table class="summary-table">
-        <thead>
-          <tr>
-            <th style="width: 5%;">SNo [cite: 61]</th>
-            <th style="width: 10%;">Awb No. [cite: 61]</th>
-            <th style="width: 10%;">Date [cite: 61]</th>
-            <th style="width: 5%;">Origin [cite: 61]</th>
-            <th style="width: 15%;">Destination [cite: 61]</th>
-            <th style="width: 5%;">State [cite: 61]</th>
-            <th style="width: 5%;">Pcs [cite: 61]</th>
-            <th style="width: 10%;">Weight D/N [cite: 61]</th>
-            <th style="width: 10%;">Amount [cite: 61]</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for bill in bills %}
-          <tr>
-            <td>{{ forloop.counter }}</td>
-            <td>{{ bill.docket_no }}</td>
-            <td>{{ bill.date|date }}</td>
-            <td>GGN</td>
-            <td>{{ bill.destination }}</td>
-            <td>{{ bill.state|default:"KA" }}</td>
-            <td>{{ bill.pieces }}</td>
-            <td>{{ bill.weight|floatformat:3 }} N</td>
-            <td>{{ bill.amount|floatformat:2 }}</td>
-          </tr>
-          {% endfor %}
+    <div class="calc-wrapper">
+      <table class="calc-table">
+        <tr>
+          <td class="text-right">Sub Total 2</td>
+          <td class="text-right bold">{{ subtotal|floatformat:2|default:"00.0" }}</td>
+        </tr>
+        <tr>
+          <td class="text-right">CGST @ 9.0%</td>
+          <td class="text-right">{{ gst_amount|floatformat:2|default:"00.0" }}</td>
+        </tr>
+        <tr>
+          <td class="text-right">SGST @ 9.0%</td>
+          <td class="text-right">{{ sgst_amount|floatformat:2|default:"00.0" }}</td>
+        </tr>
+        <tr>
+          <td class="text-right">IGST @ 18.0%</td>
+          <td class="text-right">{{ igst_amount|floatformat:2|default:"00.0" }}</td>
+        </tr>
+        <tr class="peach-bg">
+          <td class="text-right">Grand Total (Round-off)</td>
+          <td class="text-right">{{ grand_total|floatformat:2|default:"00.0" }}</td>
+        </tr>
         </tbody>
       </table>
+    </div>
 
-      <div class="summary-totals">
-        <strong>Total Awb= {{ bills|length }} [cite: 62]</strong>
-        <span><strong>Total Pcs = {{ total_pieces }} [cite: 63, 64]</strong></span>
-      </div>
+    <div style="margin-top: 20px; font-size: 11px;">
+      {{ total_in_words|default:"Zero Thousand Zero Hundred Zero Rupees Only" }}
+    </div>
 
-      <table class="totals-table">
-        <tr>
-          <td class="label">Sub Total 1 [cite: 65]</td>
-          <td class="value">{{ total|floatformat:2 }} [cite: 66]</td>
-        </tr>
-        <tr>
-          <td class="label"></td>
-          <td class="value">0.00 [cite: 67]</td>
-        </tr>
-        <tr>
-          <td class="label">Sub Total 2 [cite: 68]</td>
-          <td class="value">{{ total|floatformat:2 }} [cite: 68]</td>
-        </tr>
-        <tr>
-          <td class="label">Discount 0% [cite: 68]</td>
-          <td class="value">0.00 [cite: 68]</td>
-        </tr>
-        <tr>
-          <td class="label">Fuel Surcharge [cite: 68]</td>
-          <td class="value">0.00 [cite: 68]</td>
-        </tr>
-        <tr>
-          <td class="label">Taxable Value [cite: 68]</td>
-          <td class="value">{{ total|floatformat:2 }} [cite: 68]</td>
-        </tr>
-        <tr>
-          <td class="label">CGST @ 0.0% [cite: 68]</td>
-          <td class="value">0.00 [cite: 68]</td>
-        </tr>
-        <tr>
-          <td class="label">SGST @ 0.0% [cite: 68]</td>
-          <td class="value">0.00 [cite: 68]</td>
-        </tr>
-        <tr>
-          <td class="label">IGST @ {{ igst_percent }}% [cite: 68]</td>
-          <td class="value">{{ igst_amount|floatformat:2 }} [cite: 68]</td>
-        </tr>
-        <tr>
-          <td class="label">Grand Total (Round-off) [cite: 68]</td>
-          <td class="value">{{ grand_total|floatformat:2 }} [cite: 68]</td>
-        </tr>
-      </table>
-
-      <div class="text-center mt-10 bold">
-        {{ total_in_words }} [cite: 69]
-      </div>
-
-      <div class="summary-totals" style="text-align: left; margin-top: 15px;">
-        <strong>Sub Total: {{ total|floatformat:2 }} [cite: 70, 71]</strong>
-        <span><strong>Page Total: {{ total|floatformat:2 }} [cite: 72, 73]</strong></span>
-      </div>
-
-      <div class="text-right mt-10">
-        <strong>MYSORE [cite: 74]</strong><br />
-        Page 2 of 2 [cite: 75]
+    <div class="sticky-footer">
+      <div class="grey-footer-bar">
+        <span>MYSORE</span>
       </div>
     </div>
-  </body>
+  </div>
+
+</body>
+
 </html>

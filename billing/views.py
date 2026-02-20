@@ -1,3 +1,4 @@
+import calendar
 import os
 import datetime
 import pandas as pd
@@ -15,7 +16,7 @@ from django.views.decorators.csrf import csrf_exempt
 from weasyprint import HTML
 from django.template.loader import render_to_string
 
-from .models import Company, Bill, PincodeFile
+from .models import Company, Bill, Invoice, PincodeFile
 from .excel_engine import (
     load_cal_df,
     load_latest_pincode_df,
@@ -24,17 +25,12 @@ from .excel_engine import (
 )
 
 
-# ----------------------------------------
-#  DASHBOARD
-# ----------------------------------------
 @login_required
 def dashboard(request):
     return render(request, "billing/dashboard.html")
 
 
-# ----------------------------------------
-#  Helper → Detect Pincode Field
-# ----------------------------------------
+
 def detect_pincode_column(df):
     aliases = ["PINCODE", "PIN CODE", "PIN", "ZIP", "POSTAL", "POSTAL CODE"]
     for col in df.columns:
@@ -44,11 +40,34 @@ def detect_pincode_column(df):
     return None
 
 
-# ----------------------------------------
-#   MONTHLY BILL UPLOAD & PROCESSING
-# ----------------------------------------
+
+def apply_segment_suffix(segment, docket_no, mode):
+    """
+    Apply business rules to modify segment.
+    Priority:
+    1. Docket starts with 'G' → GEC
+    2. Mode = SURFACE → R
+    3. Mode = AIR CARGO → A
+    """
+
+    docket_no = str(docket_no).strip().upper()
+    mode = str(mode).strip().upper()
+
+    if docket_no.startswith("G"):
+        return f"{segment} GEC"
+
+    if mode == "SURFACE":
+        return f"{segment} R"
+
+    if mode == "AIR CARGO":
+        return f"{segment} A"
+
+    return segment
+
+
 @staff_member_required
 def upload_monthly(request):
+
     if request.method == "POST":
         file = request.FILES.get("file")
         if not file:
@@ -64,36 +83,49 @@ def upload_monthly(request):
         original_headers = df.columns
         df.columns = [str(c).strip().upper() for c in df.columns]
 
-        # Detect required columns (flexible)
+
+        bill_name = request.POST.get("bill_name")
+        invoice = None
+
+        if bill_name:
+            invoice, _ = Invoice.objects.get_or_create(
+                name=bill_name.strip()
+            )
+
         def find(col_set): 
             for c in df.columns: 
                 if c in col_set: return c
             return None
 
-        company_col  = find({"COMPANY NAME","COMPANY","CLIENT"})
-        docket_col   = find({"CONSIGNMENT NUMBER","DOCKET NO","LR NO"})
-        date_col     = find({"BOOKING DATE","DATE"})
-        pincode_col  = detect_pincode_column(df)
-        dest_col     = find({"DESTINATION","DESTINATION CITY","CITY"})
-        pieces_col   = find({"NO.OF PIECES","PIECES","QTY"})
-        weight_col   = find({"WEIGHT IN KGS","WEIGHT","CHARGEABLE WEIGHT"})
+        company_col = find({"COMPANY NAME", "COMPANY", "CLIENT"})
+        docket_col  = find({"DOCKET NO", "CONSIGNMENT NUMBER", "LR NO"})
+        date_col    = find({"BOOKING DATE", "DATE"})
+        pincode_col = find({"PIN CODE", "PINCODE"})
+        pieces_col  = find({"NO OF PIECES", "NO.OF PIECES", "PIECES", "QTY"})
+        manifest_weight = find({"WEIGHT"})
+        vol_weight  = find({"VOL WEIGHT", "VOLUME WEIGHT"})
+        weight_col  = find({"FINAL WEIGHT", "CHARGEABLE WEIGHT"})
+        mode_col    = find({"MODE", "SHIPMENT MODE", "TRANSPORT MODE"})
+        dest_col    = find({"DESTINATION CITY"})
+        doc_type = find({"DOCUMENT TYPE"})
+
 
         missing = [k for k,v in {
-            "COMPANY NAME":company_col,"DOCKET NO":docket_col,
-            "BOOKING DATE":date_col,"PINCODE":pincode_col
+            "COMPANY NAME":company_col,
+            "DOCKET NO":docket_col,
+            "BOOKING DATE":date_col,
+            "PINCODE":pincode_col
         }.items() if v is None]
 
         if missing:
             messages.error(request, f"Missing Columns: {missing}\nFound: {original_headers}")
             return redirect("billing:upload_monthly")
 
-        # Month infer
         try:
             month = pd.to_datetime(df.iloc[0][date_col]).strftime("%Y-%m")
         except:
             month = datetime.date.today().strftime("%Y-%m")
 
-        # Load Pincode Database
         try:
             pincode_df = load_latest_pincode_df(PincodeFile)
         except Exception as e:
@@ -104,9 +136,12 @@ def upload_monthly(request):
 
         for _, row in df.iterrows():
             try:
-                company = Company.objects.get(name__iexact=str(row[company_col]).strip())
+                company = Company.objects.get(
+                    name__iexact=str(row[company_col]).strip()
+                )
             except:
                 continue
+
 
             docket = str(row[docket_col]).strip()
 
@@ -115,99 +150,266 @@ def upload_monthly(request):
             except:
                 date_val = datetime.date.today()
 
-            dest     = str(row.get(dest_col, "")).strip() if dest_col else ""
-            pincode  = str(row[pincode_col]).strip()
-            pieces   = int(row.get(pieces_col,1)) if pieces_col else 1
-            weight   = float(row.get(weight_col,0)) if weight_col else 0
+            dest    = str(row.get(dest_col, "")).strip() if dest_col else ""
+            pincode = str(row[pincode_col]).strip()
+            pieces  = int(row.get(pieces_col, 1)) if pieces_col else 1
+            weight  = float(row.get(weight_col, 0)) if weight_col else 0
+            mani_weight = float(row.get(manifest_weight,0)) if manifest_weight else 0
+            volum_weight = float(row.get(vol_weight,0)) if vol_weight else 0
+            mode    = str(row.get(mode_col, "")).strip().upper() if mode_col else ""
+            doc_typ = str(row.get(doc_type, "")).strip() if doc_type else "NONE"
 
-            # Load cal file
             try:
                 cal_df = load_cal_df(company.rule_file.path)
             except:
                 continue
 
-            # Extract segment
-            segment = get_segment_from_pincode(pincode_df, pincode)
-
-            # Price from segment+weight
+            base_segment = get_segment_from_pincode(pincode_df, pincode)
+            segment = apply_segment_suffix(base_segment, docket, mode)
             price = get_price_by_segment_and_weight(cal_df, segment, weight)
+            amount = Decimal(price).quantize(Decimal("0.01")) if price else Decimal("0.00")
+            fsc_percent = Decimal(company.fsc_percent or 0)
+            fsc_amount = (amount * fsc_percent / 100).quantize(Decimal("0.01"))
+            docket = str(row[docket_col]).strip().upper()
+            month = date_val.strftime("%Y-%m")
+            
 
-            amount = price * pieces if price else None
-
-            # Save to DB
-            with transaction.atomic():
+            try:
                 obj, new = Bill.objects.update_or_create(
                     company=company,
                     docket_no=docket,
                     month=month,
                     defaults={
-                        "date":date_val,"destination":dest,"pincode":pincode,"segment":segment,
-                        "pieces":pieces,"weight":weight,"amount":amount,
-                    })
-                created += new
-                updated += (not new)
+                        "invoice": invoice,
+                        "date": date_val,
+                        "destination": dest,
+                        "pincode": pincode,
+                        "segment": segment,
+                        "pieces": pieces,
+                        "manifest_weight": mani_weight,
+                        "vol_weight": volum_weight,
+                        "weight": weight,
+                        "amount": amount + fsc_amount,
+                        "fsc_amount": fsc_amount,
+                        "mode": mode,
+                        "doc_type":doc_typ
+                    }
+                )
+                created += int(new)
+                updated += int(not new)
 
-        messages.success(request, f"Upload Complete ✓ Created:{created} | Updated:{updated}")
+            except Exception as e:
+                # Final safety: update manually
+                Bill.objects.filter(
+                    company=company,
+                    docket_no=docket,
+                    month=month
+                ).update(
+                    date=date_val,
+                    destination=dest,
+                    pincode=pincode,
+                    segment=segment,
+                    pieces=pieces,
+                    manifest_weight=mani_weight,
+                    vol_weight=volum_weight,
+                    weight=weight,
+                    amount=amount + fsc_amount,
+                    fsc_amount=fsc_amount,
+                    mode=mode,
+                    doc_type=doc_typ
+                )
+                updated += 1
+
+        messages.success(
+            request, f"Upload Complete ✓ Created:{created} | Updated:{updated}"
+        )
         return redirect("billing:upload_monthly")
 
-    return render(request,"billing/upload_monthly.html")
+    return render(request, "billing/upload_monthly.html")
 
 
 # ----------------------------------------
 #  REPORT PAGE → dropdown page
 # ----------------------------------------
+
 @staff_member_required
 def download_report_page(request):
-    return render(request,"billing/download_report.html",{
-        "companies":Company.objects.all(),
-        "months":Bill.objects.values_list("month",flat=True).distinct(),
+    return render(request, "billing/download_report.html", {
+        "companies": Company.objects.all(),
+        "invoices": Invoice.objects.all().order_by("-created_at"),
+        "months": Bill.objects.values_list("month", flat=True).distinct(),
     })
 
-
-# ----------------------------------------
-#  Editable Invoice Preview Page
-# ----------------------------------------
 @staff_member_required
-def invoice_preview(request, company_id, month):
-    bills = Bill.objects.filter(company_id=company_id, month=month).order_by("date")
+def invoice_preview_by_invoice(request, invoice_id):
+    from .models import Invoice
+
+    try:
+        invoice = Invoice.objects.get(id=invoice_id)
+    except Invoice.DoesNotExist:
+        return HttpResponse("Invoice not found", status=404)
+
+    bills = Bill.objects.filter(invoice=invoice).select_related("company").order_by("date")
 
     if not bills.exists():
-        return HttpResponse("No Records Found.")
+        return HttpResponse("No bills found for this invoice.")
 
-    return render(request, "billing/invoice_builder.html", {
-        "company": bills.first().company,
-        "bills": bills,
-        "month": month,
-        "today": datetime.date.today().isoformat(),
-    })
+    # Use first bill's company for header display
+    company = bills.first().company
 
+    return render(
+        request,
+        "billing/invoice_builder.html",
+        {
+            "company": company,        
+            "bills": bills,            
+            "month": invoice.name,    
+            "today": datetime.date.today().isoformat(),
+            "invoice": invoice,
+        }
+    )
 
+3
 # ----------------------------------------
 #  Update Bill Data (SESSION BASED - No DB updates)
 # ----------------------------------------
 @staff_member_required
 @csrf_exempt
 def update_bill_data(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            bill_id = data.get('bill_id')
-            field = data.get('field')
-            value = data.get('value')
-            
-            # Store in session instead of database
-            session_key = f'bill_edits_{bill_id}'
-            if session_key not in request.session:
-                request.session[session_key] = {}
-            
-            request.session[session_key][field] = value
-            request.session.modified = True
-            
-            return JsonResponse({'status': 'success', 'message': 'Updated successfully (Session)'})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)})
-    
-    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request"}, status=400)
+
+    try:
+        data = json.loads(request.body)
+        bill_id = data.get("bill_id")
+        field = data.get("field")
+        value = data.get("value")
+
+        bill = Bill.objects.get(id=bill_id)
+
+        # ============================
+        # 1️⃣ UPDATE EDITABLE FIELDS
+        # ============================
+        if field == "pieces":
+            bill.pieces = int(value or 0)
+
+        elif field in ["weight", "manifest_weight", "vol_weight"]:
+            setattr(bill, field, float(value or 0))
+
+        elif field == "oda_charges":
+            bill.oda_charges = float(value or 0)
+
+        elif field == "inv_amount":
+            raw = str(value).strip()
+
+            if "*" in raw:
+                base, percent = raw.split("*", 1)
+                base = float(base or 0)
+                percent = float(percent or 0)
+            else:
+                base = float(raw or 0)
+                percent = 3.0
+
+            bill.inv_amount = base
+            bill.inv_amt_percent = round((base * percent) / 100, 2)
+
+        elif field == "amount":
+            base_amount = float(value or 0)
+
+            fsc_percent = float(getattr(bill.company, "fsc_percent", 0) or 0)
+            bill.fsc_amount = round((base_amount * fsc_percent) / 100, 2)
+
+            bill.amount = round(
+                base_amount
+                + bill.fsc_amount
+                + float(bill.oda_charges or 0)
+                + float(bill.inv_amt_percent or 0),
+                2
+            )
+
+            bill.save()
+
+            return JsonResponse({
+                "status": "success",
+                "segment": bill.segment,
+                "amount": bill.amount,
+                "fsc_amount": bill.fsc_amount,
+                "inv_amt_percent": bill.inv_amt_percent or 0
+            })
+
+        elif field != "__recalculate__":
+            setattr(bill, field, value)
+
+        # ============================
+        # 2️⃣ LOAD CALCULATION ENGINES
+        # ============================
+        cal_df = load_cal_df(bill.company.rule_file.path)
+        pincode_df = load_latest_pincode_df(PincodeFile)
+
+        # ============================
+        # 3️⃣ SEGMENT CALCULATION
+        # ============================
+        base_segment = get_segment_from_pincode(
+            pincode_df, bill.pincode
+        )
+
+        bill.segment = apply_segment_suffix(
+            base_segment,
+            bill.docket_no,
+            bill.mode
+        )
+
+        # ============================
+        # 4️⃣ CHARGEABLE WEIGHT
+        # ============================
+        chargeable_weight = max(
+            float(bill.weight or 0),
+            float(bill.vol_weight or 0)
+        )
+
+        # ============================
+        # 5️⃣ BASE AMOUNT
+        # ============================
+        price = get_price_by_segment_and_weight(
+            cal_df,
+            bill.segment,
+            chargeable_weight
+        )
+
+        base_amount = round(price, 2) if price else 0.0
+
+        # ============================
+        # 6️⃣ FSC CALCULATION (BASE ONLY)
+        # ============================
+        fsc_percent = float(getattr(bill.company, "fsc_percent", 0) or 0)
+        bill.fsc_amount = round((base_amount * fsc_percent) / 100, 2)
+
+        # ============================
+        # 7️⃣ FINAL AMOUNT (ACCUMULATIVE)
+        # ============================
+        bill.amount = round(
+            base_amount
+            + bill.fsc_amount
+            + float(bill.oda_charges or 0)
+            + float(bill.inv_amt_percent or 0),
+            2
+        )
+
+        bill.save()
+
+        return JsonResponse({
+            "status": "success",
+            "segment": bill.segment,
+            "amount": bill.amount,
+            "fsc_amount": bill.fsc_amount,
+            "inv_amt_percent": bill.inv_amt_percent or 0
+        })
+
+    except Bill.DoesNotExist:
+        return JsonResponse({"error": "Bill not found"}, status=404)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 # ----------------------------------------
@@ -418,82 +620,97 @@ def _amount_to_words(amount):
 @staff_member_required
 def invoice_generate_final_pdf(request):
     if request.method != "POST":
-        return HttpResponse("❌ Invalid access")
+        return HttpResponse("Invalid Request", status=400)
 
     company_id = request.POST.get("company_id")
-    month      = request.POST.get("month")
+    month = request.POST.get("month")
+    invoice_id = request.POST.get("invoice_id")
 
-    invoice_no   = request.POST.get("invoice_number", f"HRS/25-26-{company_id}")
-    invoice_date = request.POST.get("invoice_date", datetime.date.today())
-    gst_value    = request.POST.get("gst", "18")  # Default to 18% IGST
+    invoice_no = request.POST.get("inv_no") or "101-101"
+    invoice_due_date = request.POST.get("inv_due_date") or datetime.date.today()
 
-    # Get original bills
-    original_bills = Bill.objects.filter(company_id=company_id, month=month).order_by("date")
-    if not original_bills.exists():
-        return HttpResponse("❌ No bills found for month.")
+    inv_date_str = request.POST.get("inv_date")
 
-    # Get edited bills from session
-    edited_bills_data = get_edited_bills(request, original_bills)
+    if inv_date_str:
+        invoice_date = datetime.datetime.strptime(inv_date_str, "%Y-%m-%d").date()
+    else:
+        invoice_date = datetime.date.today()
 
-    company = original_bills.first().company
+    # Tax amounts from frontend
+    gst_amount = Decimal(request.POST.get("gst_amount", "0") or "0")
+    cgst_amount = Decimal(request.POST.get("cgst_amount", "0") or "0")
+    igst_amount = Decimal(request.POST.get("igst_amount", "0") or "0")
 
-    # Calculate totals from edited data
-    total = Decimal(0)
+    # Fetch bills
+    if invoice_id:
+        bills = Bill.objects.filter(invoice_id=invoice_id)
+    else:
+        bills = Bill.objects.filter(company_id=company_id, month=month)
+
+    if not bills.exists():
+        return HttpResponse("No bills found")
+
+    company = bills.first().company
+
+    subtotal = Decimal("0.00")
     total_pieces = 0
-    total_weight = Decimal(0)
-    
-    for bill_data in edited_bills_data:
-        total += Decimal(bill_data.get('amount', 0) or 0)
-        total_pieces += int(bill_data.get('pieces', 0) or 0)
-        total_weight += Decimal(bill_data.get('weight', 0) or 0)
+    total_weight = Decimal("0.00")
 
-    # Calculate GST (IGST @ 18%)
-    taxable_value = total
-    gst_percent = Decimal(gst_value)
-    gst_amount = (taxable_value * gst_percent) / Decimal(100)
-    grand_total = taxable_value + gst_amount
+    for b in bills:
+        subtotal += Decimal(b.amount or 0)
+        total_pieces += b.pieces or 0
+        total_weight += Decimal(b.weight or 0)
 
-    # Determine state codes (you might want to enhance this logic)
-    def get_state_code(destination):
-        state_mapping = {
-            'BANGALORE': 'KA',
-            'MYSORE': 'KA', 
-            'DELHI': 'DL',
-            'CHANDIGARH': 'CH',
-            'PUNE': 'MH',
-            'MALUR': 'KA',
-            # Add more mappings as needed
+    # Subtotal itself is taxable
+    taxable_value = subtotal.quantize(Decimal("0.01"))
+
+    grand_total = (
+        taxable_value + gst_amount + cgst_amount + igst_amount
+    ).quantize(Decimal("0.01"))
+
+    year = invoice_date.year
+    month_num = invoice_date.month
+
+    start_date = datetime.date(year, month_num, 1)
+    last_day = calendar.monthrange(year, month_num)[1]
+    end_date = datetime.date(year, month_num, last_day)
+
+    period = f"{start_date.strftime('%d/%m/%Y')} To {end_date.strftime('%d/%m/%Y')}"
+
+    html = render_to_string(
+        "billing/final_invoice_pdf.html",
+        {
+            "company": company,
+            "bills": bills,
+
+            "invoice_no": invoice_no,
+            "invoice_date": invoice_date,
+            "inv_due_date": invoice_due_date,
+            "period": period,
+
+            "subtotal": taxable_value,
+            "gst_amount": gst_amount,
+            "cgst_amount": cgst_amount,
+            "igst_amount": igst_amount,
+
+            "grand_total": grand_total,
+            "total_in_words": _amount_to_words(grand_total),
+
+            "total_pieces": total_pieces,
+            "total_weight": total_weight,
         }
-        for key, code in state_mapping.items():
-            if key in destination.upper():
-                return code
-        return 'KA'  # Default to Karnataka
+    )
 
-    # Add state codes to bill data
-    for bill in edited_bills_data:
-        bill['state'] = get_state_code(bill.get('destination', ''))
-
-    html_string = render_to_string("billing/final_invoice_pdf.html", {
-        "company": company,
-        "bills": edited_bills_data,
-        "invoice_no": invoice_no,
-        "invoice_date": invoice_date,
-        "period": f"01/{month.split('-')[1]}/20{month.split('-')[0]} To 30/{month.split('-')[1]}/20{month.split('-')[0]}",
-        "total": taxable_value,
-        "gst": gst_amount,
-        "grand_total": grand_total,
-        "total_in_words": _amount_to_words(grand_total),
-        "total_pieces": total_pieces,
-        "total_weight": total_weight,
-    })
-
-    # Generate PDF
-    html = HTML(string=html_string, base_url=request.build_absolute_uri())
-    
-    pdf = html.write_pdf()
+    pdf = HTML(
+        string=html,
+        base_url=request.build_absolute_uri()
+    ).write_pdf()
 
     response = HttpResponse(pdf, content_type="application/pdf")
-    response["Content-Disposition"] = f'attachment; filename="Invoice_{company.name}_{month}.pdf"'
+    response["Content-Disposition"] = (
+        f'attachment; filename="Invoice_{company.name}_{month}.pdf"'
+    )
+
     return response
 
 
@@ -509,3 +726,64 @@ def generate_pdf(request):
         return response
 
     return HttpResponse("Invalid Request")
+
+
+
+@staff_member_required
+@csrf_exempt
+def recalculate_bill(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request"}, status=400)
+
+    try:
+        data = json.loads(request.body)
+        bill_id = str(data.get("bill_id"))
+
+        # Get original bill if exists
+        bill = None
+        if not bill_id.startswith("temp_"):
+            bill = Bill.objects.get(id=bill_id)
+
+        # Load session edits
+        session_key = f"bill_edits_{bill_id}"
+        edits = request.session.get(session_key, {})
+
+        # Merge data (session overrides DB)
+        docket_no = edits.get("docket_no", bill.docket_no if bill else "")
+        pincode   = edits.get("pincode", bill.pincode if bill else "")
+        weight    = float(edits.get("weight", bill.weight if bill else 0))
+        pieces    = int(edits.get("pieces", bill.pieces if bill else 1))
+        mode      = edits.get("mode", "")  # optional future use
+
+        company = bill.company if bill else None
+        if not company:
+            return JsonResponse({"error": "Company not found"}, status=400)
+
+        # Load required engines
+        cal_df = load_cal_df(company.rule_file.path)
+        pincode_df = load_latest_pincode_df(PincodeFile)
+
+        # SEGMENT LOGIC
+        base_segment = get_segment_from_pincode(pincode_df, pincode)
+        final_segment = apply_segment_suffix(base_segment, docket_no, mode)
+
+        # PRICE LOGIC (FIXED SLAB LOGIC)
+        price = get_price_by_segment_and_weight(cal_df, final_segment, weight)
+        amount = round(price * pieces, 2) if price else 0
+
+        # Save back to session
+        edits.update({
+            "segment": final_segment,
+            "amount": amount,
+        })
+        request.session[session_key] = edits
+        request.session.modified = True
+
+        return JsonResponse({
+            "status": "success",
+            "segment": final_segment,
+            "amount": amount
+        })
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)

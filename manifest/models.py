@@ -17,6 +17,8 @@ class ManifestRecord(models.Model):
     def __str__(self):
         return self.docket_no
 
+from django.db import models
+
 class ScannedDocket(models.Model):
     company_name = models.CharField(max_length=255)
     docket_no = models.CharField(max_length=50, db_index=True)
@@ -25,6 +27,11 @@ class ScannedDocket(models.Model):
     pieces = models.CharField(max_length=100, null=True)
     matched = models.BooleanField(default=False)
     manifest_date = models.DateField(null=True, blank=True)
+
+    # 🔹 NEW FIELDS
+    lbh_data = models.JSONField(null=True, blank=True)   # stores LBH per piece
+    mode = models.CharField(max_length=50, null=True, blank=True)
+    manifest_weight = models.FloatField(null=True, blank=True)
 
     class Meta:
         unique_together = ("company_name", "docket_no")
