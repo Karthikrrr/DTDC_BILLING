@@ -318,7 +318,12 @@ def update_bill_data(request):
 
             fsc_percent = float(getattr(bill.company, "fsc_percent", 0) or 0)
 
-            fsc_base = manual_base + float(bill.inv_amt_percent or 0)
+            fsc_base = (
+                manual_base
+                + float(bill.inv_amt_percent or 0)
+                + float(bill.oda_charges or 0)
+            )
+
             bill.fsc_amount = round((fsc_base * fsc_percent) / 100, 2)
 
             bill.amount = round(
@@ -371,14 +376,19 @@ def update_bill_data(request):
             cal_df, bill.segment, chargeable_weight
         )
 
-        slab_base = round(price * bill.pieces, 2) if price else 0.0
+        slab_base = round(price, 2) if price else 0.0
 
         # ============================
-        # 6️⃣ FSC (ON SLAB + INVOICE %)
+        # 6️⃣ FSC (ON SLAB + INV + ODA)
         # ============================
         fsc_percent = float(getattr(bill.company, "fsc_percent", 0) or 0)
 
-        fsc_base = slab_base + float(bill.inv_amt_percent or 0)
+        fsc_base = (
+            slab_base
+            + float(bill.inv_amt_percent or 0)
+            + float(bill.oda_charges or 0)
+        )
+
         bill.fsc_amount = round((fsc_base * fsc_percent) / 100, 2)
 
         # ============================
@@ -407,8 +417,6 @@ def update_bill_data(request):
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-
-
 # ----------------------------------------
 #  Create New Bill (SESSION BASED - No DB updates)
 # ----------------------------------------
