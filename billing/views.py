@@ -314,16 +314,18 @@ def update_bill_data(request):
             bill.inv_amt_percent = round((base * percent) / 100, 2)
 
         elif field == "amount":
-            base_amount = float(value or 0)
+            manual_base = float(value or 0)
 
             fsc_percent = float(getattr(bill.company, "fsc_percent", 0) or 0)
-            bill.fsc_amount = round((base_amount * fsc_percent) / 100, 2)
+
+            fsc_base = manual_base + float(bill.inv_amt_percent or 0)
+            bill.fsc_amount = round((fsc_base * fsc_percent) / 100, 2)
 
             bill.amount = round(
-                base_amount
+                manual_base
+                + bill.inv_amt_percent
                 + bill.fsc_amount
-                + float(bill.oda_charges or 0)
-                + float(bill.inv_amt_percent or 0),
+                + float(bill.oda_charges or 0),
                 2
             )
 
@@ -341,22 +343,17 @@ def update_bill_data(request):
             setattr(bill, field, value)
 
         # ============================
-        # 2️⃣ LOAD CALCULATION ENGINES
+        # 2️⃣ LOAD ENGINES
         # ============================
         cal_df = load_cal_df(bill.company.rule_file.path)
         pincode_df = load_latest_pincode_df(PincodeFile)
 
         # ============================
-        # 3️⃣ SEGMENT CALCULATION
+        # 3️⃣ SEGMENT
         # ============================
-        base_segment = get_segment_from_pincode(
-            pincode_df, bill.pincode
-        )
-
+        base_segment = get_segment_from_pincode(pincode_df, bill.pincode)
         bill.segment = apply_segment_suffix(
-            base_segment,
-            bill.docket_no,
-            bill.mode
+            base_segment, bill.docket_no, bill.mode
         )
 
         # ============================
@@ -368,30 +365,30 @@ def update_bill_data(request):
         )
 
         # ============================
-        # 5️⃣ BASE AMOUNT
+        # 5️⃣ SLAB BASE AMOUNT
         # ============================
         price = get_price_by_segment_and_weight(
-            cal_df,
-            bill.segment,
-            chargeable_weight
+            cal_df, bill.segment, chargeable_weight
         )
 
-        base_amount = round(price, 2) if price else 0.0
+        slab_base = round(price * bill.pieces, 2) if price else 0.0
 
         # ============================
-        # 6️⃣ FSC CALCULATION (BASE ONLY)
+        # 6️⃣ FSC (ON SLAB + INVOICE %)
         # ============================
         fsc_percent = float(getattr(bill.company, "fsc_percent", 0) or 0)
-        bill.fsc_amount = round((base_amount * fsc_percent) / 100, 2)
+
+        fsc_base = slab_base + float(bill.inv_amt_percent or 0)
+        bill.fsc_amount = round((fsc_base * fsc_percent) / 100, 2)
 
         # ============================
-        # 7️⃣ FINAL AMOUNT (ACCUMULATIVE)
+        # 7️⃣ FINAL AMOUNT
         # ============================
         bill.amount = round(
-            base_amount
+            slab_base
+            + bill.inv_amt_percent
             + bill.fsc_amount
-            + float(bill.oda_charges or 0)
-            + float(bill.inv_amt_percent or 0),
+            + float(bill.oda_charges or 0),
             2
         )
 
