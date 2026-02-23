@@ -648,9 +648,9 @@ def invoice_generate_final_pdf(request):
 
     # Fetch bills
     if invoice_id:
-        bills = Bill.objects.filter(invoice_id=invoice_id)
+        bills = Bill.objects.filter(invoice_id=invoice_id).order_by("date")
     else:
-        bills = Bill.objects.filter(company_id=company_id, month=month)
+        bills = Bill.objects.filter(company_id=company_id, month=month).order_by("date")
 
     if not bills.exists():
         return HttpResponse("No bills found")
