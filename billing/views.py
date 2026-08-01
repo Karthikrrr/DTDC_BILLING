@@ -4,7 +4,8 @@ import datetime
 import pandas as pd
 from decimal import Decimal
 import json
-
+from django.db.models import DecimalField, Sum, Count
+from django.db.models.functions import Coalesce
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from django.contrib import messages
@@ -244,26 +245,35 @@ def download_report_page(request):
 def invoice_preview_by_invoice(request, invoice_id):
     from .models import Invoice
 
+    company_id = request.GET.get("company")
+
+    if not company_id:
+        return HttpResponse("Company not selected", status=400)
+
     try:
         invoice = Invoice.objects.get(id=invoice_id)
     except Invoice.DoesNotExist:
         return HttpResponse("Invoice not found", status=404)
 
-    bills = Bill.objects.filter(invoice=invoice).select_related("company").order_by("date")
+    bills = (
+        Bill.objects
+        .filter(invoice=invoice, company_id=company_id)
+        .select_related("company")
+        .order_by("date")
+    )
 
     if not bills.exists():
-        return HttpResponse("No bills found for this invoice.")
+        return HttpResponse("No bills found for this company & invoice.")
 
-    # Use first bill's company for header display
     company = bills.first().company
 
     return render(
         request,
         "billing/invoice_builder.html",
         {
-            "company": company,        
-            "bills": bills,            
-            "month": invoice.name,    
+            "company": company,
+            "bills": bills,
+            "month": invoice.name,
             "today": datetime.date.today().isoformat(),
             "invoice": invoice,
         }
@@ -627,97 +637,95 @@ def invoice_generate_final_pdf(request):
     if request.method != "POST":
         return HttpResponse("Invalid Request", status=400)
 
-    company_id = request.POST.get("company_id")
-    month = request.POST.get("month")
-    invoice_id = request.POST.get("invoice_id")
-
-    invoice_no = request.POST.get("inv_no") or "101-101"
+    company_id  = request.POST.get("company_id")
+    month       = request.POST.get("month")
+    invoice_id  = request.POST.get("invoice_id")
+    invoice_no  = request.POST.get("inv_no") or "101-101"
     invoice_due_date = request.POST.get("inv_due_date") or datetime.date.today()
 
     inv_date_str = request.POST.get("inv_date")
+    invoice_date = (
+        datetime.datetime.strptime(inv_date_str, "%Y-%m-%d").date()
+        if inv_date_str else datetime.date.today()
+    )
 
-    if inv_date_str:
-        invoice_date = datetime.datetime.strptime(inv_date_str, "%Y-%m-%d").date()
-    else:
-        invoice_date = datetime.date.today()
-
-    # Tax amounts from frontend
-    gst_amount = Decimal(request.POST.get("gst_amount", "0") or "0")
+    gst_amount  = Decimal(request.POST.get("gst_amount",  "0") or "0")
     cgst_amount = Decimal(request.POST.get("cgst_amount", "0") or "0")
     igst_amount = Decimal(request.POST.get("igst_amount", "0") or "0")
 
-    # Fetch bills
-    if invoice_id:
-        bills = Bill.objects.filter(invoice_id=invoice_id).order_by("date")
+    if invoice_id and company_id:
+        bills = (
+            Bill.objects
+            .filter(invoice_id=invoice_id, company_id=company_id)
+            .select_related("company")
+            .order_by("date")
+        )
+    elif invoice_id:
+        bills = (
+            Bill.objects
+            .filter(invoice_id=invoice_id)
+            .select_related("company")
+            .order_by("date")
+        )
     else:
-        bills = Bill.objects.filter(company_id=company_id, month=month).order_by("date")
+        bills = (
+            Bill.objects
+            .filter(company_id=company_id, month=month)
+            .select_related("company")
+            .order_by("date")
+        )
 
     if not bills.exists():
         return HttpResponse("No bills found")
 
-    company = bills.first().company
+    aggregates = bills.aggregate(
+        subtotal=Coalesce(Sum("amount"), Decimal("0.00"), output_field=DecimalField()),
+        total_pieces=Coalesce(Sum("pieces"), 0),
+        total_weight=Coalesce(Sum("weight"), Decimal("0.00"), output_field=DecimalField()),
+    )
 
-    subtotal = Decimal("0.00")
-    total_pieces = 0
-    total_weight = Decimal("0.00")
+    subtotal     = Decimal(str(aggregates["subtotal"])).quantize(Decimal("0.01"))
+    total_pieces = aggregates["total_pieces"]
+    total_weight = Decimal(str(aggregates["total_weight"]))
+    grand_total  = (subtotal + gst_amount + cgst_amount + igst_amount).quantize(Decimal("0.01"))
 
-    for b in bills:
-        subtotal += Decimal(b.amount or 0)
-        total_pieces += b.pieces or 0
-        total_weight += Decimal(b.weight or 0)
+    company    = bills.first().company
 
-    # Subtotal itself is taxable
-    taxable_value = subtotal.quantize(Decimal("0.01"))
-
-    grand_total = (
-        taxable_value + gst_amount + cgst_amount + igst_amount
-    ).quantize(Decimal("0.01"))
-
-    year = invoice_date.year
-    month_num = invoice_date.month
-
+    year       = invoice_date.year
+    month_num  = invoice_date.month
     start_date = datetime.date(year, month_num, 1)
-    last_day = calendar.monthrange(year, month_num)[1]
-    end_date = datetime.date(year, month_num, last_day)
+    end_date   = datetime.date(year, month_num, calendar.monthrange(year, month_num)[1])
+    period     = f"{start_date.strftime('%d/%m/%Y')} To {end_date.strftime('%d/%m/%Y')}"
 
-    period = f"{start_date.strftime('%d/%m/%Y')} To {end_date.strftime('%d/%m/%Y')}"
+    bills_list = list(bills)
 
     html = render_to_string(
         "billing/final_invoice_pdf.html",
         {
-            "company": company,
-            "bills": bills,
-
-            "invoice_no": invoice_no,
-            "invoice_date": invoice_date,
-            "inv_due_date": invoice_due_date,
-            "period": period,
-
-            "subtotal": taxable_value,
-            "gst_amount": gst_amount,
-            "cgst_amount": cgst_amount,
-            "igst_amount": igst_amount,
-
-            "grand_total": grand_total,
+            "company":        company,
+            "bills":          bills_list,
+            "invoice_no":     invoice_no,
+            "invoice_date":   invoice_date,
+            "inv_due_date":   invoice_due_date,
+            "period":         period,
+            "subtotal":       subtotal,
+            "gst_amount":     gst_amount,
+            "cgst_amount":    cgst_amount,
+            "igst_amount":    igst_amount,
+            "grand_total":    grand_total,
             "total_in_words": _amount_to_words(grand_total),
-
-            "total_pieces": total_pieces,
-            "total_weight": total_weight,
+            "total_pieces":   total_pieces,
+            "total_weight":   total_weight,
         }
     )
 
-    pdf = HTML(
-        string=html,
-        base_url=request.build_absolute_uri()
-    ).write_pdf()
+    pdf = HTML(string=html, base_url=request.build_absolute_uri()).write_pdf()
 
     response = HttpResponse(pdf, content_type="application/pdf")
     response["Content-Disposition"] = (
         f'attachment; filename="Invoice_{company.name}_{month}.pdf"'
     )
-
     return response
-
 
 
 @staff_member_required
@@ -792,3 +800,8 @@ def recalculate_bill(request):
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+
+def custom_logout(request):
+    logout(request)
+    return redirect('/admin/')

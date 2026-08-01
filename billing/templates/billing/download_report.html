@@ -39,17 +39,21 @@
     const companyId = document.getElementById("companySelect").value;
     const invoiceId = document.getElementById("invoiceSelect").value;
 
-    if (!companyId && !invoiceId) {
-      alert("Please select Company or Bill Name");
+    if (!companyId) {
+      alert("Please select a company");
       return;
     }
 
-    if (invoiceId) {
-      window.location.href = `/billing/invoice/by-invoice/${invoiceId}/`;
+    if (!invoiceId) {
+      alert("Please select a bill name");
       return;
     }
 
-    alert("Month-based preview disabled. Please select Bill Name.");
+    // ✅ DEBUG (optional – remove later)
+    console.log("Company:", companyId, "Invoice:", invoiceId);
+
+    window.location.href =
+      `/billing/invoice/by-invoice/${invoiceId}/?company=${companyId}`;
   }
 </script>
 </div>

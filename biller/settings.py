@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'jazzmin',
+    'django_cleanup.apps.CleanupConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -49,12 +50,11 @@ JAZZMIN_SETTINGS = {
     "welcome_sign": "Welcome to Billing Admin",
 
     # Add your MAIN SITE link here — this appears on top navbar
-    "topmenu_links": [
-        {"name": "Dashboard", "url": "/billing/dashboard/", "permissions": ["auth.view_user"]},
-        {"name": "Main Site", "url": "/", "new_window": False},
-       {"name": "Logout", "url": "/logout/"}
-    ],
-
+"topmenu_links": [
+    {"name": "Dashboard", "url": "/billing/dashboard/", "permissions": ["auth.view_user"]},
+    {"name": "Main Site", "url": "/", "new_window": False},
+    {"name": "Logout", "url": "/logout/"},
+],
     # Optional — put link in sidebar footer
     "show_sidebar": True,
     "related_modal_active": True,
@@ -109,9 +109,9 @@ WSGI_APPLICATION = 'biller.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE':'django.db.backends.postgresql',
-        'NAME':'postgres',
-        'USER':'karthik',
-        'PASSWORD':'karthikr1234',
+        'NAME':'dtdc_billing',
+        'USER':'dtdc',
+        'PASSWORD':'dtdc123',
         'HOST':'localhost',
         'PORT':'5432',
     }
@@ -137,7 +137,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 

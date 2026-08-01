@@ -14,6 +14,7 @@ urlpatterns = [
         views.invoice_preview_by_invoice,
         name="invoice_preview_by_invoice"
     ),
+    
 
     path('update/bill/', views.update_bill_data, name='update_bill_data'),
     path('create/bill/', views.create_bill, name='create_bill'),

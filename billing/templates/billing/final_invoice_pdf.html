@@ -170,7 +170,7 @@
       background: #fff;
       padding: 0 10px;
       font-weight: bold;
-      left: 35%;
+      left: 45%;
     }
 
     .ack-table {
@@ -370,7 +370,7 @@
       <strong>RTGS /NEFT IFSC CODE : HDFC0003668</strong><br>
       <strong>BANK NAME : HDFC BANK LIMTED</strong><br>
       <strong>Bank Branch : Vijayanagar 2nd Stage, Mysore - 570017</strong><br>
-      <span style="color: red;"> <strong> Payment Due Date :</strong> {{ inv_due_date|default:"19-Jan-2026" }}</span>
+      <span style="color: red;"> <strong> Payment Due Date :</strong> {{ inv_due_date|slice:"8:10" }}-{{ inv_due_date|slice:"5:7" }}-{{ inv_due_date|slice:"0:4" }}</span>
     </div>
 
     <div class="footer-notes">
@@ -421,7 +421,7 @@
       <div style="display: flex; justify-content: space-between; font-size: 10px; margin-top: 5px;">
         <div style="line-height: 1.2;">
           <strong>Amount In Words:</strong> <br>
-          <span style="font-size: 10px;">&lt;&lt; Scan &amp; Pay &gt;&gt;</span>
+          <!-- <span style="font-size: 10px;">&lt;&lt; Scan &amp; Pay &gt;&gt;</span> -->
         </div>
         <div class="text-right" style="line-height: 1.5;">
           <p class="bold" style="margin: 0;">{{ total_in_words|default:"Thirty Four Thousand Four Hundred Twenty One Rupees Only" }}</p>
@@ -465,7 +465,7 @@
       <div class="text-right">
         <strong> Invoice No :</strong> &nbsp; {{ invoice_no|default:"HRS/25-26-100" }}<br>
        <strong> Invoice Date :</strong> &nbsp; {{ invoice_date|date:"d-M-Y"|default:"01-Oct-2025" }}<br>
-        From &nbsp;01-Sep-2025&nbsp;To&nbsp;30-Sep-2025
+        From {{ period|default:"01/09/2025 To 30/09/2025" }}
       </div>
     </div>
 

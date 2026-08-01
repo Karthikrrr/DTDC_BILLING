@@ -65,7 +65,7 @@
   <body>
     <div class="container-fluid mt-3">
       <div class="invoice-box">
-        <h4 class="mb-3">🧾 Invoice Editor</h4>
+        <h4 class="mb-3">🧾 Invoice Editor For {{ company.name }}</h4>
 
         <!-- Invoice Header -->
         <div class="row mb-3">
@@ -131,6 +131,7 @@
           <table class="table table-bordered table-sm">
             <thead>
               <tr>
+                <th>Company Name</th>
                 <th>Docket</th>
                 <th>Date</th>
                 <th>Destination</th>
@@ -153,6 +154,14 @@
             <tbody>
               {% for b in bills %}
               <tr id="row-{{ b.id }}" data-bill-id="{{ b.id }}">
+                    <td>
+                  <input
+                    style="background: #eee"
+                    value="{{ b.company }}"
+                    
+                    readonly
+                  />
+                </td>
                 <td>
                   <input
                     style="background: #eee"
