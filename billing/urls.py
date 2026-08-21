@@ -23,4 +23,5 @@ urlpatterns = [
     path('generate/final/pdf/', views.invoice_generate_final_pdf, name='invoice_generate_final_pdf'),
     path('generate/pdf/', views.generate_pdf, name='generate_pdf'),
     path("recalculate/bill/", views.recalculate_bill, name="recalculate_bill"),
+    path("download/finaldetails/", views.download_FinalDetails_excel, name='download_details'),
 ]

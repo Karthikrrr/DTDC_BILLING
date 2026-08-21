@@ -63,3 +63,13 @@ class Bill(models.Model):
     def __str__(self):
         return f"{self.company.name} - {self.docket_no}"
 
+
+class FinalDetails(models.Model):
+    company_name = models.CharField(max_length=30)
+    inv_date = models.DateTimeField(auto_now_add=False)
+    inv_number = models.CharField(max_length=20)
+    sgst = models.FloatField(default=0)
+    cgst = models.FloatField(default=0)
+    igst = models.FloatField(default=0)
+    grand_total = models.FloatField(default=0)
+

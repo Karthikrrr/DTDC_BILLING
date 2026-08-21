@@ -109,9 +109,9 @@ WSGI_APPLICATION = 'biller.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE':'django.db.backends.postgresql',
-        'NAME':'dtdc_billing',
-        'USER':'dtdc',
-        'PASSWORD':'dtdc123',
+        'NAME':'postgres',
+        'USER':'karthik',
+        'PASSWORD':'karthikr1234',
         'HOST':'localhost',
         'PORT':'5432',
     }

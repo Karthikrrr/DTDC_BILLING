@@ -1,38 +1,251 @@
 {% extends "base.html" %}
+
+{% block title %}Missing Dockets - Billing Suite{% endblock %}
+{% block page_title %}Missing Dockets{% endblock %}
+
 {% block content %}
+
+<style>
+  .missing-card {
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: var(--card-shadow);
+    border: 1px solid rgba(15, 23, 42, .05);
+    padding: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+    animation: slideUp .55s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .missing-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--warning), #f97316, var(--danger));
+    background-size: 200% auto;
+    animation: shimmer 3s linear infinite;
+  }
+
+  .missing-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    animation: fadeIn .6s ease both;
+    animation-delay: .1s;
+  }
+
+  .missing-title {
+    font-weight: 800;
+    font-size: 1.4rem;
+    letter-spacing: -.02em;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+  }
+
+  .missing-title .icon {
+    display: inline-flex;
+    width: 42px;
+    height: 42px;
+    border-radius: .75rem;
+    background: linear-gradient(135deg, var(--warning), #f97316);
+    color: #fff;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    animation: float 4s ease-in-out infinite;
+  }
+
+  .btn-download {
+    border: none;
+    color: #fff;
+    padding: .65rem 1.25rem;
+    border-radius: .625rem;
+    font-weight: 600;
+    font-size: .9rem;
+    background: linear-gradient(135deg, var(--success), #059669);
+    box-shadow: 0 4px 14px rgba(16, 185, 129, .35);
+    transition: transform .25s ease, box-shadow .25s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    text-decoration: none;
+  }
+
+  .btn-download:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, .45);
+    color: #fff;
+  }
+
+  .table-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: .75rem;
+    overflow: hidden;
+    animation: slideUp .5s ease both;
+    animation-delay: .15s;
+  }
+
+  .table {
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .table thead th {
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+    color: #e2e8f0;
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    padding: .85rem 1rem;
+    border: none;
+    white-space: nowrap;
+  }
+
+  .table tbody tr {
+    transition: background-color .15s ease;
+    animation: fadeIn .4s ease both;
+  }
+
+  .table tbody tr:nth-child(odd) {
+    background: #fafafa;
+  }
+
+  .table tbody tr:hover {
+    background: #f1f5f9;
+  }
+
+  .table td {
+    padding: .75rem 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: .9rem;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--secondary);
+    animation: scaleIn .5s ease both;
+  }
+
+  .empty-state .icon {
+    font-size: 2.5rem;
+    margin-bottom: .75rem;
+    display: inline-block;
+    animation: bounce 2s ease infinite;
+  }
+
+  .empty-state p {
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .badge-count {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .35rem .75rem;
+    background: rgba(245, 158, 11, .12);
+    color: #92400e;
+    border-radius: 2rem;
+    font-size: .8rem;
+    font-weight: 700;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+</style>
+
 <div class="container">
-<h2>Missing Dockets</h2>
+  <div class="missing-card">
+    <div class="missing-header">
+      <h2 class="missing-title">
+        <span class="icon"><i class="bi bi-exclamation-diamond"></i></span>
+        Missing Dockets
+      </h2>
+      {% if missing %}
+      <span class="badge-count">
+        <i class="bi bi-list-ul"></i> {{ missing|length }} found
+      </span>
+      {% endif %}
+    </div>
 
-{% if missing %}
-<div class="mb-3">
-  <a href="{% url 'download_missing_excel' %}" class="btn btn-success">
-    Download Missing Dockets (Excel)
-  </a>
-</div>
-{% endif %}
+    {% if missing %}
+    <div class="mb-3" style="animation: slideUp .5s ease both; animation-delay: .12s;">
+      <a href="{% url 'download_missing_excel' %}" class="btn-download">
+        <i class="bi bi-file-earmark-excel"></i>
+        Download Missing Dockets (Excel)
+      </a>
+    </div>
+    {% endif %}
 
-<table class="table table-bordered table-striped">
-  <thead>
-    <tr>
-      <th>Docket No</th>
-      <th>Booking Date</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for d in missing %}
-    <tr>
-      <td>{{ d.docket_no }}</td>
-      <td>{{ d.manifest_date }}</td>
-    </tr>
-    {% empty %}
-    <tr>
-      <td colspan="2" class="text-center">
-        No missing dockets 🎉
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+    <div class="table-card">
+      <table class="table table-bordered table-striped">
+        <thead>
+          <tr>
+            <th>Docket No</th>
+            <th>Booking Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in missing %}
+          <tr>
+            <td><strong>{{ d.docket_no }}</strong></td>
+            <td>{{ d.manifest_date }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="2">
+              <div class="empty-state">
+                <span class="icon">🎉</span>
+                <p>No missing dockets</p>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 {% endblock %}

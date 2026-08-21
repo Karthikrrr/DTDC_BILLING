@@ -1,135 +1,233 @@
 {% extends "base.html" %}
-{% block content %}
 
+{% block title %}Dashboard - Billing Suite{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block extra_css %}
 <style>
-  .dashboard-card {
-    border-radius: 12px;
-    transition: all 0.25s ease;
-    cursor: pointer;
-    height: 100%;
-  }
+    .hero {
+        border-radius: 1.25rem;
+        padding: 2.25rem;
+        color: #fff;
+        background: linear-gradient(135deg, #4f46e5, #6366f1 55%, #0ea5e9);
+        box-shadow: 0 18px 40px -18px rgba(79, 70, 229, .7);
+        position: relative;
+        overflow: hidden;
+        animation: slideUp .5s ease both;
+    }
 
-  .dashboard-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 25px rgba(0,0,0,0.15);
-  }
+    .hero::after {
+        content: '';
+        position: absolute;
+        inset: -40% -20% auto auto;
+        width: 340px;
+        height: 340px;
+        background: radial-gradient(circle, rgba(255, 255, 255, .22), transparent 65%);
+        animation: float 6s ease-in-out infinite;
+    }
 
-  .dashboard-icon {
-    font-size: 38px;
-    margin-bottom: 12px;
-  }
+    .hero h2 { font-weight: 800; letter-spacing: -.02em; margin: 0; }
+    .hero p { margin: .5rem 0 0; opacity: .9; }
 
-  .section-title {
-    border-left: 5px solid #0d6efd;
-    padding-left: 12px;
-    margin: 40px 0 20px;
-    font-weight: 600;
-  }
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        font-weight: 700;
+        margin: 2.5rem 0 1.25rem;
+        animation: fadeIn .6s ease both;
+    }
+
+    .section-title::before {
+        content: '';
+        width: 5px;
+        height: 26px;
+        border-radius: 6px;
+        background: linear-gradient(180deg, var(--primary), #818cf8);
+    }
+
+    .section-title span.count {
+        font-size: .75rem;
+        font-weight: 600;
+        color: var(--secondary);
+        background: rgba(100, 116, 139, .12);
+        border-radius: 2rem;
+        padding: .15rem .65rem;
+    }
+
+    .tile {
+        display: block;
+        height: 100%;
+        padding: 1.5rem;
+        text-decoration: none;
+        color: inherit;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .tile::before {
+        content: '';
+        position: absolute;
+        left: 0; top: 0; bottom: 0;
+        width: 4px;
+        background: var(--tile-color, var(--primary));
+        transform: scaleY(0);
+        transform-origin: bottom;
+        transition: transform .3s ease;
+    }
+
+    .tile:hover::before { transform: scaleY(1); }
+
+    .tile-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        color: var(--tile-color, var(--primary));
+        background: color-mix(in srgb, var(--tile-color, #4f46e5) 12%, transparent);
+        margin-bottom: 1rem;
+        transition: transform .3s ease, box-shadow .3s ease;
+    }
+
+    .tile:hover .tile-icon {
+        transform: translateY(-3px) scale(1.06) rotate(-4deg);
+        box-shadow: 0 10px 20px -10px var(--tile-color, #4f46e5);
+    }
+
+    .tile h5 { font-weight: 700; font-size: 1.02rem; margin-bottom: .25rem; }
+    .tile small { color: var(--secondary); }
+
+    .tile-arrow {
+        position: absolute;
+        right: 1.25rem;
+        bottom: 1.25rem;
+        color: var(--tile-color, var(--primary));
+        opacity: 0;
+        transform: translateX(-6px);
+        transition: all .3s ease;
+    }
+
+    .tile:hover .tile-arrow { opacity: 1; transform: translateX(0); }
 </style>
+{% endblock %}
 
+{% block content %}
 <div class="container">
 
-  <h1 class="mb-4 fw-bold">📊 Billing Dashboard</h1>
-
-  <!-- ================= Billing Section ================= -->
-  <h4 class="section-title">Billing Operations</h4>
-
-  <div class="row g-4">
-
-    <div class="col-md-3">
-      <a href="{% url 'billing:upload_monthly' %}" class="text-decoration-none text-dark">
-        <div class="card dashboard-card text-center p-4">
-          <div class="dashboard-icon text-primary">📤</div>
-          <h5>Upload Billing File</h5>
-          <small class="text-muted">Upload monthly billing Excel</small>
-        </div>
-      </a>
+    <div class="hero mb-2 ">
+        <h2>Billing Dashboard</h2>
+        <p>Upload bills, reconcile manifests and export final reports — all in one place.</p>
     </div>
 
-    <div class="col-md-3">
-      <a href="{% url 'billing:download_report_page' %}" class="text-decoration-none text-dark">
-        <div class="card dashboard-card text-center p-4">
-          <div class="dashboard-icon text-success">📥</div>
-          <h5>Download Reports</h5>
-          <small class="text-muted">Company & date-wise bills</small>
+    <!-- ================= Billing ================= -->
+    <h4 class="section-title">Billing Operations <span class="count">3</span></h4>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="dashboard-card h-100">
+                <a href="{% url 'billing:upload_monthly' %}" class="tile" style="--tile-color:#4f46e5">
+                    <div class="tile-icon"><i class="bi bi-cloud-arrow-up-fill"></i></div>
+                    <h5>Upload Billing File</h5>
+                    <small>Upload monthly billing Excel</small>
+                    <i class="bi bi-arrow-right tile-arrow"></i>
+                </a>
+            </div>
         </div>
-      </a>
+        <div class="col-md-4">
+            <div class="dashboard-card h-100">
+                <a href="{% url 'billing:download_report_page' %}" class="tile" style="--tile-color:#10b981">
+                    <div class="tile-icon"><i class="bi bi-download"></i></div>
+                    <h5>Download Reports</h5>
+                    <small>Company &amp; date-wise bills</small>
+                    <i class="bi bi-arrow-right tile-arrow"></i>
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="dashboard-card h-100">
+                <a href="/admin/billing/company/" class="tile" style="--tile-color:#0ea5e9">
+                    <div class="tile-icon"><i class="bi bi-buildings-fill"></i></div>
+                    <h5>Manage Companies</h5>
+                    <small>Add / edit billing companies</small>
+                    <i class="bi bi-arrow-right tile-arrow"></i>
+                </a>
+            </div>
+        </div>
     </div>
 
-    <div class="col-md-3">
-      <a href="/admin/billing/company/" class="text-decoration-none text-dark">
-        <div class="card dashboard-card text-center p-4">
-          <div class="dashboard-icon text-info">🏢</div>
-          <h5>Manage Companies</h5>
-          <small class="text-muted">Add / Edit billing companies</small>
+    <!-- ================= Manifest ================= -->
+    <h4 class="section-title">Manifest Operations <span class="count">4</span></h4>
+    <div class="row g-4">
+        <div class="col-md-6 col-lg-3">
+            <div class="dashboard-card h-100">
+                <a href="{% url 'upload_manifest' %}" class="tile" style="--tile-color:#f59e0b">
+                    <div class="tile-icon"><i class="bi bi-file-earmark-arrow-up-fill"></i></div>
+                    <h5>Upload Manifest</h5>
+                    <small>Upload manifest Excel file</small>
+                    <i class="bi bi-arrow-right tile-arrow"></i>
+                </a>
+            </div>
         </div>
-      </a>
+        <div class="col-md-6 col-lg-3">
+            <div class="dashboard-card h-100">
+                <a href="{% url 'scan_docket' %}" class="tile" style="--tile-color:#0f172a">
+                    <div class="tile-icon"><i class="bi bi-upc-scan"></i></div>
+                    <h5>Scan / Enter Docket</h5>
+                    <small>Search or manually add dockets</small>
+                    <i class="bi bi-arrow-right tile-arrow"></i>
+                </a>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="dashboard-card h-100">
+                <a href="{% url 'missing_dockets' %}" class="tile" style="--tile-color:#ef4444">
+                    <div class="tile-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                    <h5>Missing Dockets</h5>
+                    <small>Find unlinked consignments</small>
+                    <i class="bi bi-arrow-right tile-arrow"></i>
+                </a>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="dashboard-card h-100">
+                <a href="{% url 'download_excel' %}" class="tile" style="--tile-color:#64748b">
+                    <div class="tile-icon"><i class="bi bi-file-earmark-spreadsheet-fill"></i></div>
+                    <h5>Final Excel</h5>
+                    <small>Download final processed data</small>
+                    <i class="bi bi-arrow-right tile-arrow"></i>
+                </a>
+            </div>
+        </div>
     </div>
 
-  </div>
-
-  <!-- ================= Manifest Section ================= -->
-  <h4 class="section-title">Manifest Operations</h4>
-
-  <div class="row g-4">
-
-    <div class="col-md-3">
-      <a href="{% url 'upload_manifest' %}" class="text-decoration-none text-dark">
-        <div class="card dashboard-card text-center p-4">
-          <div class="dashboard-icon text-warning">📄</div>
-          <h5>Upload Manifest</h5>
-          <small class="text-muted">Upload manifest Excel file</small>
+    <!-- ================= Merge ================= -->
+    <h4 class="section-title">Final Merge <span class="count">1</span></h4>
+    <div class="row g-4">
+        <div class="col-md-6 col-lg-4">
+            <div class="dashboard-card h-100">
+                <a href="{% url 'merge_excel' %}" class="tile" style="--tile-color:#8b5cf6">
+                    <div class="tile-icon"><i class="bi bi-link-45deg"></i></div>
+                    <h5>Merge Excel Files</h5>
+                    <small>Combine billing &amp; manifest data</small>
+                    <i class="bi bi-arrow-right tile-arrow"></i>
+                </a>
+            </div>
         </div>
-      </a>
-    </div>
 
-    <div class="col-md-3">
-      <a href="{% url 'scan_docket' %}" class="text-decoration-none text-dark">
-        <div class="card dashboard-card text-center p-4">
-          <div class="dashboard-icon text-dark">🔍</div>
-          <h5>Scan / Enter Docket</h5>
-          <small class="text-muted">Search or manually add dockets</small>
+         <div class="col-md-6 col-lg-4">
+            <div class="dashboard-card h-100">
+                <a href="{% url 'billing:download_details' %}" class="tile" style="--tile-color:#10b981">
+                    <div class="tile-icon"><i class="bi bi-download"></i></div>
+                    <h5>Download Final Details</h5>
+                    <small>Download Full Final Report data</small>
+                    <i class="bi bi-arrow-right tile-arrow"></i>
+                </a>
+            </div>
         </div>
-      </a>
     </div>
-
-    <div class="col-md-3">
-      <a href="{% url 'missing_dockets' %}" class="text-decoration-none text-dark">
-        <div class="card dashboard-card text-center p-4">
-          <div class="dashboard-icon text-danger">⚠️</div>
-          <h5>Missing Dockets</h5>
-          <small class="text-muted">Find unlinked consignments</small>
-        </div>
-      </a>
-    </div>
-
-    <div class="col-md-3">
-      <a href="{% url 'download_excel' %}" class="text-decoration-none text-dark">
-        <div class="card dashboard-card text-center p-4">
-          <div class="dashboard-icon text-secondary">📊</div>
-          <h5>Final Excel</h5>
-          <small class="text-muted">Download final processed data</small>
-        </div>
-      </a>
-    </div>
-
-  </div>
-
-  <!-- ================= Merge Section ================= -->
-  <h4 class="section-title">Final Merge</h4>
-
-  <div class="row g-4">
-    <div class="col-md-3">
-      <a href="{% url 'merge_excel' %}" class="text-decoration-none text-dark">
-        <div class="card dashboard-card text-center p-4">
-          <div class="dashboard-icon text-info">🔗</div>
-          <h5>Merge Excel Files</h5>
-          <small class="text-muted">Combine billing & manifest data</small>
-        </div>
-      </a>
-    </div>
-  </div>
+    
 
 </div>
-
 {% endblock %}

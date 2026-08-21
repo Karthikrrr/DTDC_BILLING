@@ -1,28 +1,482 @@
-{% extends "base.html" %} {% block content %}
-<div class="container">
-<h2>Upload Monthly Excel</h2>
-<form method="post" enctype="multipart/form-data" class="mt-3">
-  {% csrf_token %}
-  <div class="mb-3">
-    <label class="form-label"><strong>Bill Name</strong></label>
-    <input
-      type="text"
-      name="bill_name"
-      class="form-control"
-      placeholder="Example: jan-bill"
-      required
-    />
-    <small class="text-muted">
-      Bills uploaded will be grouped under this bill name
-    </small>
-  </div>
+{% extends "base.html" %}
 
-  <div class="mb-3">
-    <input type="file" name="file" accept=".xlsx,.xls,.csv" required />
-  </div>
-  <button class="btn btn-success" type="submit">Upload & Process</button>
-</form>
-{% for m in messages %}
-<div class="alert alert-info mt-3">{{ m }}</div>
+{% block title %}Upload Monthly Bill - Billing Dashboard{% endblock %}
+{% block page_title %}Upload Monthly Excel{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Upload Page Specific Styles */
+    .upload-card {
+        max-width: 720px;
+        margin: 0 auto;
+        animation: slideUp 0.5s ease forwards;
+    }
+
+    .upload-card .card-header {
+        background: transparent;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 1.5rem;
+    }
+
+    .upload-card .card-title {
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .upload-card .card-title i {
+        color: var(--primary);
+        font-size: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        border: 1px solid #e2e8f0;
+        border-radius: 0.625rem;
+        padding: 0.75rem 1rem;
+        transition: all 0.25s ease;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    }
+
+    .form-text {
+        color: #64748b;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+
+    /* Drag & Drop Zone */
+    .drop-zone {
+        border: 2px dashed #cbd5e1;
+        border-radius: 1rem;
+        padding: 3rem 2rem;
+        text-align: center;
+        background: #f8fafc;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .drop-zone::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.03), rgba(129, 140, 248, 0.03));
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.dragover {
+        border-color: var(--primary);
+        background: #fff;
+        transform: translateY(-2px);
+        box-shadow: var(--card-shadow-hover);
+    }
+
+    .drop-zone:hover::before,
+    .drop-zone.dragover::before {
+        opacity: 1;
+    }
+
+    .drop-zone-icon {
+        width: 72px;
+        height: 72px;
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(129, 140, 248, 0.1));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .drop-zone:hover .drop-zone-icon,
+    .drop-zone.dragover .drop-zone-icon {
+        transform: scale(1.1);
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.15), rgba(129, 140, 248, 0.15));
+    }
+
+    .drop-zone-icon i {
+        font-size: 2rem;
+        color: var(--primary);
+    }
+
+    .drop-zone-text {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 0.5rem;
+    }
+
+    .drop-zone-hint {
+        color: #64748b;
+        font-size: 0.875rem;
+    }
+
+    .drop-zone-formats {
+        display: inline-flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    .format-badge {
+        padding: 0.25rem 0.75rem;
+        background: #e0e7ff;
+        color: var(--primary);
+        border-radius: 2rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .file-input {
+        display: none;
+    }
+
+    .file-selected {
+        display: none;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1rem;
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        border-radius: 0.625rem;
+        margin-top: 1rem;
+        animation: slideUp 0.3s ease forwards;
+    }
+
+    .file-selected.show {
+        display: flex;
+    }
+
+    .file-selected i {
+        font-size: 1.5rem;
+        color: var(--success);
+    }
+
+    .file-info {
+        flex: 1;
+    }
+
+    .file-name {
+        font-weight: 600;
+        color: #1e293b;
+        word-break: break-all;
+    }
+
+    .file-size {
+        font-size: 0.875rem;
+        color: #64748b;
+    }
+
+    .btn-remove-file {
+        background: none;
+        border: none;
+        color: #94a3b8;
+        cursor: pointer;
+        padding: 0.25rem;
+        transition: color 0.2s ease;
+    }
+
+    .btn-remove-file:hover {
+        color: var(--danger);
+    }
+
+    /* Progress animation */
+    .upload-progress {
+        display: none;
+        margin-top: 1.5rem;
+    }
+
+    .upload-progress.show {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .progress {
+        height: 8px;
+        border-radius: 1rem;
+        background: #e2e8f0;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        background: linear-gradient(90deg, var(--primary), #818cf8);
+        background-size: 200% 100%;
+        animation: progress-shine 1.5s ease infinite;
+    }
+
+    @keyframes progress-shine {
+        0% {
+            background-position: 200% 0;
+        }
+        100% {
+            background-position: -200% 0;
+        }
+    }
+
+    /* Alert styling */
+    .alert-custom {
+        border: none;
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        animation: slideUp 0.4s ease forwards;
+    }
+
+    .alert-info-custom {
+        background: #eff6ff;
+        color: #1e40af;
+    }
+
+    .alert-success-custom {
+        background: #ecfdf5;
+        color: #065f46;
+    }
+
+    .alert-warning-custom {
+        background: #fffbeb;
+        color: #92400e;
+    }
+
+    .alert-danger-custom {
+        background: #fef2f2;
+        color: #991b1b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card dashboard-card upload-card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="bi bi-cloud-upload"></i>
+                        Upload Monthly Excel
+                    </h2>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <form method="post" enctype="multipart/form-data" id="uploadForm" class="upload-form">
+                        {% csrf_token %}
+
+                        <!-- Bill Name -->
+                        <div class="mb-4">
+                            <label for="bill_name" class="form-label">
+                                <i class="bi bi-tag-fill me-2 text-primary"></i>Bill Name
+                            </label>
+                            <input
+                                type="text"
+                                id="bill_name"
+                                name="bill_name"
+                                class="form-control form-control-lg"
+                                placeholder="Example: jan-bill"
+                                required
+                            />
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Bills uploaded will be grouped under this bill name
+                            </div>
+                        </div>
+
+                        <!-- File Upload -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-file-earmark-arrow-up-fill me-2 text-primary"></i>Upload File
+                            </label>
+                            <div class="drop-zone" id="dropZone">
+                                <input
+                                    type="file"
+                                    name="file"
+                                    id="fileInput"
+                                    class="file-input"
+                                    accept=".xlsx,.xls,.csv"
+                                    required
+                                />
+                                <div class="drop-zone-icon">
+                                    <i class="bi bi-cloud-arrow-up"></i>
+                                </div>
+                                <div class="drop-zone-text">Drag & drop your file here</div>
+                                <div class="drop-zone-hint">or click to browse from your computer</div>
+                                <div class="drop-zone-formats">
+                                    <span class="format-badge">.XLSX</span>
+                                    <span class="format-badge">.XLS</span>
+                                    <span class="format-badge">.CSV</span>
+                                </div>
+                            </div>
+
+                            <!-- Selected file display -->
+                            <div class="file-selected" id="fileSelected">
+                                <i class="bi bi-file-earmark-check-fill"></i>
+                                <div class="file-info">
+                                    <div class="file-name" id="fileName">No file selected</div>
+                                    <div class="file-size" id="fileSize"></div>
+                                </div>
+                                <button type="button" class="btn-remove-file" id="removeFile" title="Remove file">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Upload Progress -->
+                        <div class="upload-progress" id="uploadProgress">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Uploading...</span>
+                                <span class="text-primary fw-semibold" id="progressPercent">0%</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid d-md-flex justify-content-md-start mt-4">
+                            <button class="btn btn-success-custom btn-lg" type="submit" id="submitBtn">
+                                <i class="bi bi-lightning-charge-fill me-2"></i>
+                                Upload & Process
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Messages -->
+                    {% for m in messages %}
+                        <div class="alert alert-custom {% if m.tags %}{% if m.tags == 'success' %}alert-success-custom{% elif m.tags == 'warning' %}alert-warning-custom{% elif m.tags == 'error' %}alert-danger-custom{% else %}alert-info-custom{% endif %}{% else %}alert-info-custom{% endif %} mt-4">
+                            <i class="bi bi-info-circle-fill"></i>
+                            <span>{{ m }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-{% endfor %} {% endblock %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileSelected = document.getElementById('fileSelected');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const removeFile = document.getElementById('removeFile');
+        const uploadForm = document.getElementById('uploadForm');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const progressBar = document.getElementById('progressBar');
+        const progressPercent = document.getElementById('progressPercent');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Show selected file
+        function showSelectedFile(file) {
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileSelected.classList.add('show');
+            dropZone.classList.add('border-success');
+        }
+
+        // Remove selected file
+        function removeSelectedFile() {
+            fileInput.value = '';
+            fileSelected.classList.remove('show');
+            dropZone.classList.remove('border-success');
+        }
+
+        // Click to browse
+        dropZone.addEventListener('click', function(e) {
+            if (e.target !== removeFile && !removeFile.contains(e.target)) {
+                fileInput.click();
+            }
+        });
+
+        // File input change
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                showSelectedFile(this.files[0]);
+            }
+        });
+
+        // Drag and drop events
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, function() {
+                this.classList.add('dragover');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, function() {
+                this.classList.remove('dragover');
+            }, false);
+        });
+
+        dropZone.addEventListener('drop', function(e) {
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                showSelectedFile(files[0]);
+            }
+        });
+
+        // Remove file button
+        removeFile.addEventListener('click', function(e) {
+            e.stopPropagation();
+            removeSelectedFile();
+        });
+
+        // Form submission animation
+        uploadForm.addEventListener('submit', function() {
+            if (fileInput.files.length > 0) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+                uploadProgress.classList.add('show');
+
+                // Simulate progress (since Django handles actual upload)
+                let progress = 0;
+                const interval = setInterval(function() {
+                    progress += Math.random() * 15;
+                    if (progress >= 90) {
+                        progress = 90;
+                        clearInterval(interval);
+                    }
+                    progressBar.style.width = progress + '%';
+                    progressPercent.textContent = Math.round(progress) + '%';
+                }, 300);
+            }
+        });
+    });
+</script>
+{% endblock %}

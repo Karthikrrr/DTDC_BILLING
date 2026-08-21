@@ -1,6 +1,7 @@
 import calendar
 import os
 import datetime
+from django.utils.timezone import make_naive
 import pandas as pd
 from decimal import Decimal
 import json
@@ -17,7 +18,7 @@ from django.views.decorators.csrf import csrf_exempt
 from weasyprint import HTML
 from django.template.loader import render_to_string
 
-from .models import Company, Bill, Invoice, PincodeFile
+from .models import Company, Bill, FinalDetails, Invoice, PincodeFile
 from .excel_engine import (
     load_cal_df,
     load_latest_pincode_df,
@@ -698,6 +699,18 @@ def invoice_generate_final_pdf(request):
     period     = f"{start_date.strftime('%d/%m/%Y')} To {end_date.strftime('%d/%m/%Y')}"
 
     bills_list = list(bills)
+    final_details, created = FinalDetails.objects.update_or_create(
+    company_name=company.name,
+    defaults={
+        "inv_date": invoice_date,
+        "inv_number": invoice_no,
+        "sgst": gst_amount,
+        "cgst": cgst_amount,
+        "igst": igst_amount,
+        "grand_total": grand_total,
+    }
+)
+
 
     html = render_to_string(
         "billing/final_invoice_pdf.html",
@@ -725,6 +738,35 @@ def invoice_generate_final_pdf(request):
     response["Content-Disposition"] = (
         f'attachment; filename="Invoice_{company.name}_{month}.pdf"'
     )
+    return response
+
+
+def download_FinalDetails_excel(request):
+    scanned = FinalDetails.objects.filter()
+    
+
+    data = []
+    for s in scanned:
+         naive_inv_date = make_naive(s.inv_date) if s.inv_date else None
+         formatted_date = naive_inv_date.strftime('%d/%m/%Y') if naive_inv_date else ""
+         data.append({
+            "Company Name": s.company_name,
+            "Invoice Number": s.inv_number,
+            "Invoice Date": formatted_date,
+            "CGST":s.cgst,
+            "SGST":s.sgst,
+            "IGST":s.igst,
+            "Grand Total":s.grand_total
+        })
+
+    df = pd.DataFrame(data)
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = 'attachment; filename="final.xlsx"'
+
+    df.to_excel(response, index=False)
     return response
 
 

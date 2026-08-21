@@ -1,20 +1,299 @@
 {% extends "base.html" %}
+
+{% block title %}Upload DTDC Manifest{% endblock %}
+{% block page_title %}Upload DTDC Manifest{% endblock %}
+
 {% block content %}
 <div class="container">
+    <div class="upload-card mx-auto" style="max-width: 640px;">
+        <div class="upload-header">
+            <div class="upload-icon animate-float">
+                <i class="bi bi-truck"></i>
+            </div>
+            <h2 class="upload-title">Upload DTDC Manifest</h2>
+            <p class="upload-subtitle">Select the manifest file to process and update records.</p>
+        </div>
 
-<h2>Upload DTDC Manifest</h2>
+        <div class="upload-body">
+            {% if error %}
+            <div class="alert alert-danger alert-animated">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                {{ error }}
+            </div>
+            {% endif %}
 
-{% if error %}
-<div class="alert alert-danger">
-  {{ error }}
+            <form method="post" enctype="multipart/form-data" id="manifestForm">
+                {% csrf_token %}
+
+                <div class="drop-zone mb-4" id="dropZone">
+                    <input type="file" name="file" id="fileInput" required hidden>
+                    <div class="drop-zone-content">
+                        <div class="drop-zone-icon">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                        </div>
+                        <p class="drop-zone-text"><strong>Click to upload</strong> or drag & drop</p>
+                        <p class="drop-zone-hint">Supported: .xlsx, .xls, .csv</p>
+                    </div>
+                    <div class="file-preview" id="filePreview">
+                        <i class="bi bi-file-earmark-spreadsheet"></i>
+                        <span class="file-name" id="fileName"></span>
+                        <button type="button" class="file-remove" id="fileRemove" title="Remove file">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary-custom w-100 upload-btn" type="submit">
+                    <i class="bi bi-upload me-2"></i>
+                    Upload Manifest
+                </button>
+            </form>
+        </div>
+    </div>
 </div>
-{% endif %}
 
-<form method="post" enctype="multipart/form-data">
-  {% csrf_token %}
-  <input type="file" name="file" required>
-  <button class="btn btn-primary">Upload</button>
-</form>
-</div>
+<style>
+    .upload-card {
+        background: #fff;
+        border-radius: 1.25rem;
+        box-shadow: var(--card-shadow);
+        border: 1px solid rgba(15, 23, 42, .05);
+        overflow: hidden;
+        animation: slideUp .55s ease both;
+    }
 
+    .upload-header {
+        background: linear-gradient(135deg, #0f172a 0%, #312e81 100%);
+        color: #fff;
+        padding: 2.25rem 1.5rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .upload-header::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,.08) 50%, transparent 70%);
+        animation: shimmer 3s infinite;
+    }
+
+    .upload-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 1rem;
+        background: rgba(255,255,255,.15);
+        backdrop-filter: blur(4px);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 8px 24px rgba(0,0,0,.2);
+    }
+
+    .upload-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 0 .35rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .upload-subtitle {
+        margin: 0;
+        opacity: .85;
+        font-size: .95rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .upload-body {
+        padding: 2rem 1.5rem;
+    }
+
+    .drop-zone {
+        border: 2px dashed #cbd5e1;
+        border-radius: 1rem;
+        padding: 2rem 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color .25s ease, background-color .25s ease, transform .25s ease;
+        position: relative;
+        background: #f8fafc;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.drag-over {
+        border-color: var(--primary);
+        background: rgba(79, 70, 229, .05);
+        transform: scale(1.01);
+    }
+
+    .drop-zone-icon {
+        font-size: 2.5rem;
+        color: var(--primary);
+        margin-bottom: .75rem;
+        transition: transform .25s ease;
+    }
+
+    .drop-zone:hover .drop-zone-icon,
+    .drop-zone.drag-over .drop-zone-icon {
+        transform: translateY(-4px);
+    }
+
+    .drop-zone-text {
+        margin: 0 0 .25rem;
+        color: #334155;
+    }
+
+    .drop-zone-hint {
+        margin: 0;
+        font-size: .85rem;
+        color: #94a3b8;
+    }
+
+    .file-preview {
+        display: none;
+        align-items: center;
+        gap: .75rem;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: .75rem;
+        padding: .75rem 1rem;
+        text-align: left;
+        margin-top: 1rem;
+        animation: popIn .35s ease both;
+    }
+
+    .file-preview.active {
+        display: flex;
+    }
+
+    .file-preview i {
+        font-size: 1.5rem;
+        color: var(--success);
+    }
+
+    .file-name {
+        flex: 1;
+        font-weight: 500;
+        color: #1e293b;
+        word-break: break-all;
+    }
+
+    .file-remove {
+        background: none;
+        border: none;
+        color: #94a3b8;
+        cursor: pointer;
+        padding: .25rem;
+        border-radius: .375rem;
+        transition: color .2s ease, background .2s ease;
+    }
+
+    .file-remove:hover {
+        color: var(--danger);
+        background: #fee2e2;
+    }
+
+    .upload-btn {
+        font-size: 1rem;
+        padding: .875rem 1.5rem;
+    }
+
+    .upload-btn:active {
+        transform: scale(.98);
+    }
+
+    .alert-animated {
+        animation: shake .5s ease both;
+    }
+
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    @keyframes popIn {
+        from { opacity: 0; transform: scale(.9); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        20% { transform: translateX(-6px); }
+        40% { transform: translateX(6px); }
+        60% { transform: translateX(-4px); }
+        80% { transform: translateX(4px); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .upload-card,
+        .drop-zone,
+        .drop-zone-icon,
+        .file-preview,
+        .alert-animated,
+        .upload-header::before {
+            animation: none !important;
+            transition: none !important;
+        }
+    }
+</style>
+
+<script>
+    (function () {
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const filePreview = document.getElementById('filePreview');
+        const fileName = document.getElementById('fileName');
+        const fileRemove = document.getElementById('fileRemove');
+        const dropZoneContent = dropZone.querySelector('.drop-zone-content');
+
+        function showFile(file) {
+            fileName.textContent = file.name;
+            filePreview.classList.add('active');
+            dropZoneContent.style.display = 'none';
+        }
+
+        function clearFile() {
+            fileInput.value = '';
+            filePreview.classList.remove('active');
+            dropZoneContent.style.display = 'block';
+        }
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            if (files.length) {
+                fileInput.files = files;
+                showFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) {
+                showFile(fileInput.files[0]);
+            }
+        });
+
+        fileRemove.addEventListener('click', (e) => {
+            e.stopPropagation();
+            clearFile();
+        });
+    })();
+</script>
 {% endblock %}

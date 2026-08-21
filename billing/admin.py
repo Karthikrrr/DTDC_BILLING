@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Company, Bill, Invoice, PincodeFile
+from .models import Company, Bill, FinalDetails, Invoice, PincodeFile
 
 
 @admin.register(Invoice)
@@ -21,6 +21,13 @@ class PincodeFileAdmin(admin.ModelAdmin):
     list_display = ("id", "file", "uploaded_at")
     ordering = ("id",)
 
+@admin.register(FinalDetails)
+class FinalDetailsAdmin(admin.ModelAdmin):
+    list_display = ("id", "company_name", "inv_date", "inv_number", "cgst", "sgst", "igst", "grand_total")
+    search_fields = (
+            "company_name","inv_number"
+        )
+    ordering = ("id",)
 
 @admin.register(Bill)
 class BillAdmin(admin.ModelAdmin):
