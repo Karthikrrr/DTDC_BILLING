@@ -65,7 +65,7 @@ class Bill(models.Model):
 
 
 class FinalDetails(models.Model):
-    company_name = models.CharField(max_length=30)
+    company_name = models.CharField(max_length=255)
     inv_date = models.DateTimeField(auto_now_add=False)
     inv_number = models.CharField(max_length=20)
     sgst = models.FloatField(default=0)

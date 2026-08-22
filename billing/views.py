@@ -764,7 +764,7 @@ def download_FinalDetails_excel(request):
     response = HttpResponse(
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-    response["Content-Disposition"] = 'attachment; filename="final.xlsx"'
+    response["Content-Disposition"] = 'attachment; filename="Final_Details.xlsx"'
 
     df.to_excel(response, index=False)
     return response
