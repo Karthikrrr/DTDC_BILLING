@@ -702,6 +702,8 @@ def invoice_generate_final_pdf(request):
     final_details, created = FinalDetails.objects.update_or_create(
     company_name=company.name,
     defaults={
+        "gst_number": company.gst_no,
+        "taxable_val": subtotal,
         "inv_date": invoice_date,
         "inv_number": invoice_no,
         "sgst": gst_amount,
@@ -751,12 +753,15 @@ def download_FinalDetails_excel(request):
          formatted_date = naive_inv_date.strftime('%d/%m/%Y') if naive_inv_date else ""
          data.append({
             "Company Name": s.company_name,
+            "GST Number": s.gst_number,
             "Invoice Number": s.inv_number,
             "Invoice Date": formatted_date,
+            "Taxable Value":s.taxable_val,
             "CGST":s.cgst,
             "SGST":s.sgst,
             "IGST":s.igst,
-            "Grand Total":s.grand_total
+            "Grand Total": s.grand_total
+            
         })
 
     df = pd.DataFrame(data)

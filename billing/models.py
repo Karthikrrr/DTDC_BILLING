@@ -66,6 +66,8 @@ class Bill(models.Model):
 
 class FinalDetails(models.Model):
     company_name = models.CharField(max_length=255)
+    gst_number = models.CharField(max_length=225, null=True, default="000000000")
+    taxable_val = models.FloatField(default=0)
     inv_date = models.DateTimeField(auto_now_add=False)
     inv_number = models.CharField(max_length=20)
     sgst = models.FloatField(default=0)
