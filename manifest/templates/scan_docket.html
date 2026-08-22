@@ -138,8 +138,13 @@
     animation: slideUp .5s ease both;
   }
 
-  .form-group:nth-of-type(1) { animation-delay: .15s; }
-  .form-group:nth-of-type(2) { animation-delay: .2s; }
+  .form-group:nth-of-type(1) {
+    animation-delay: .15s;
+  }
+
+  .form-group:nth-of-type(2) {
+    animation-delay: .2s;
+  }
 
   .form-label {
     font-weight: 600;
@@ -173,28 +178,75 @@
     line-height: 1.5;
   }
 
+  /* =========================================================
+     COMPANY AUTOCOMPLETE
+     ========================================================= */
+
+  .company-autocomplete-wrapper {
+    position: relative;
+    z-index: 1000;
+  }
+
   .autocomplete-list {
     position: absolute;
-    top: 100%;
+
+    /* Keep dropdown directly below input */
+    top: calc(100% + 6px);
     left: 0;
     right: 0;
-    background: #fff;
+
+    /* FORCE SOLID WHITE BACKGROUND */
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+
+    /* Prevent transparency */
+    opacity: 1 !important;
+
     border: 1px solid #e2e8f0;
     border-radius: .625rem;
-    max-height: 180px;
+
+    max-height: 220px;
     overflow-y: auto;
-    z-index: 1000;
+
+    /* Keep dropdown above other elements */
+    z-index: 999999;
+
     display: none;
-    margin-top: .35rem;
-    box-shadow: 0 10px 25px rgba(15, 23, 42, .12);
+
+    margin: 0;
+
+    padding: 4px 0;
+
+    box-shadow: 0 10px 25px rgba(15, 23, 42, .15);
+
+    /* Prevent parent/theme transparency effects */
+    isolation: isolate;
+
     animation: fadeIn .2s ease both;
   }
 
   .autocomplete-item {
+    display: block;
+    width: 100%;
+
     padding: .65rem .9rem;
+
     cursor: pointer;
+
     font-size: .9rem;
-    transition: background-color .15s ease;
+    line-height: 1.4;
+
+    /* FORCE SOLID WHITE */
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+
+    color: #334155 !important;
+
+    opacity: 1 !important;
+
+    transition: background-color .15s ease, color .15s ease;
+
+    border: 0;
     border-bottom: 1px solid #f1f5f9;
   }
 
@@ -204,8 +256,28 @@
 
   .autocomplete-item.active,
   .autocomplete-item:hover {
-    background-color: #f1f5f9;
-    color: var(--primary);
+    background: #f1f5f9 !important;
+    background-color: #f1f5f9 !important;
+
+    color: var(--primary) !important;
+  }
+
+  /* Scrollbar for company dropdown */
+  .autocomplete-list::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .autocomplete-list::-webkit-scrollbar-track {
+    background: #ffffff;
+  }
+
+  .autocomplete-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+  }
+
+  .autocomplete-list::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
   }
 
   .lbh-section {
@@ -284,66 +356,158 @@
     box-shadow: 0 10px 24px rgba(79, 70, 229, .45);
   }
 
+  /* =========================================================
+     ANIMATIONS
+     ========================================================= */
+
   @keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
+    0% {
+      background-position: -200% 0;
+    }
+
+    100% {
+      background-position: 200% 0;
+    }
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
   }
 
   @keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
+    0%, 100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-6px);
+    }
   }
 </style>
 
 <div class="upload-card">
+
+  <!-- =====================================================
+       HEADER
+       ===================================================== -->
+
   <div class="upload-header">
+
     <div class="upload-icon">
       <i class="bi bi-upc-scan"></i>
     </div>
-    <h2 class="upload-title">Scan / Upload Dockets</h2>
-    <p class="upload-subtitle">Select a company, scan or type docket numbers, and add volumetric details.</p>
+
+    <h2 class="upload-title">
+      Scan / Upload Dockets
+    </h2>
+
+    <p class="upload-subtitle">
+      Select a company, scan or type docket numbers, and add volumetric details.
+    </p>
+
   </div>
+
+
+  <!-- =====================================================
+       ERROR MESSAGE
+       ===================================================== -->
 
   {% if error %}
+
   <div class="alert alert-danger alert-custom" role="alert">
+
     <i class="bi bi-exclamation-triangle-fill"></i>
+
     <span>{{ error }}</span>
+
   </div>
+
   {% endif %}
+
+
+  <!-- =====================================================
+       ACTION BUTTONS
+       ===================================================== -->
 
   <div class="action-bar">
-    <a class="btn-action btn-success-action" href="{% url 'missing_dockets' %}">
-      <i class="bi bi-exclamation-diamond"></i> View Missing Dockets
+
+    <a
+      class="btn-action btn-success-action"
+      href="{% url 'missing_dockets' %}"
+    >
+      <i class="bi bi-exclamation-diamond"></i>
+      View Missing Dockets
     </a>
-    <a class="btn-action btn-primary-action" href="{% url 'download_excel' %}">
-      <i class="bi bi-file-earmark-excel"></i> Download Final Excel
+
+    <a
+      class="btn-action btn-primary-action"
+      href="{% url 'download_excel' %}"
+    >
+      <i class="bi bi-file-earmark-excel"></i>
+      Download Final Excel
     </a>
+
   </div>
+
+
+  <!-- =====================================================
+       SUCCESS MESSAGE
+       ===================================================== -->
 
   {% if message %}
+
   <div class="alert alert-success alert-custom" role="alert">
+
     <i class="bi bi-check-circle-fill"></i>
+
     <span>{{ message }}</span>
+
   </div>
+
   {% endif %}
 
+
+  <!-- =====================================================
+       MAIN FORM
+       ===================================================== -->
+
   <form method="post">
+
     {% csrf_token %}
 
-    <div class="form-group position-relative">
-      <label class="form-label" for="company-input">
-        <i class="bi bi-building text-primary"></i> Company name
+
+    <!-- ===================================================
+         COMPANY NAME
+         =================================================== -->
+
+    <div class="form-group position-relative company-autocomplete-wrapper">
+
+      <label
+        class="form-label"
+        for="company-input"
+      >
+        <i class="bi bi-building text-primary"></i>
+        Company name
       </label>
+
       <input
         type="text"
         id="company-input"
@@ -353,13 +517,30 @@
         autocomplete="off"
         required
       >
-      <div id="company-dropdown" class="autocomplete-list"></div>
+
+      <!-- Company autocomplete dropdown -->
+      <div
+        id="company-dropdown"
+        class="autocomplete-list"
+      ></div>
+
     </div>
 
+
+    <!-- ===================================================
+         DOCKET NUMBERS
+         =================================================== -->
+
     <div class="form-group">
-      <label class="form-label" for="docket_numbers">
-        <i class="bi bi-upc text-primary"></i> Docket Numbers (one per line)
+
+      <label
+        class="form-label"
+        for="docket_numbers"
+      >
+        <i class="bi bi-upc text-primary"></i>
+        Docket Numbers (one per line)
       </label>
+
       <textarea
         name="docket_numbers"
         id="docket_numbers"
@@ -367,188 +548,548 @@
         rows="8"
         autofocus
         placeholder="Scan or type dockets here"
-        required></textarea>
+        required
+      ></textarea>
+
     </div>
 
-    <div class="lbh-section" id="lbh-section">
-      <div class="lbh-title">VOLUMATRIC Details (L,B,H in inches)</div>
-      <div class="lbh-grid" id="lbh-inputs"></div>
+
+    <!-- ===================================================
+         VOLUMETRIC DETAILS
+         =================================================== -->
+
+    <div
+      class="lbh-section"
+      id="lbh-section"
+    >
+
+      <div class="lbh-title">
+        VOLUMATRIC Details (L,B,H in inches)
+      </div>
+
+      <div
+        class="lbh-grid"
+        id="lbh-inputs"
+      ></div>
+
     </div>
 
-    <input type="hidden" name="lbh_json" id="lbh_json">
 
-    <button class="btn btn-primary btn-upload" type="submit">
+    <!-- Hidden JSON field -->
+    <input
+      type="hidden"
+      name="lbh_json"
+      id="lbh_json"
+    >
+
+
+    <!-- ===================================================
+         SUBMIT BUTTON
+         =================================================== -->
+
+    <button
+      class="btn btn-primary btn-upload"
+      type="submit"
+    >
+
       <i class="bi bi-cloud-upload-fill"></i>
+
       Upload Dockets
+
     </button>
+
   </form>
+
 </div>
 
-<script>
-  const COMPANIES = [
-    {% for c in companies %}
-    "{{ c.name|escapejs }}",
-    {% endfor %}
-  ];
-</script>
+
+<!-- =======================================================
+     COMPANY AUTOCOMPLETE DATA
+     ======================================================= -->
 
 <script>
+
+  const COMPANIES = [
+
+    {% for c in companies %}
+
+      "{{ c.name|escapejs }}",
+
+    {% endfor %}
+
+  ];
+
+</script>
+
+
+<!-- =======================================================
+     COMPANY AUTOCOMPLETE
+     ======================================================= -->
+
+<script>
+
   const input = document.getElementById("company-input");
+
   const dropdown = document.getElementById("company-dropdown");
 
   let currentFocus = -1;
+
   let currentItems = [];
 
-  /* ---------- INPUT SEARCH ---------- */
+
+  /* =====================================================
+     INPUT SEARCH
+     ===================================================== */
+
   input.addEventListener("input", function () {
-    const query = this.value.toLowerCase();
+
+    const query = this.value.toLowerCase().trim();
 
     dropdown.innerHTML = "";
+
     currentItems = [];
+
     currentFocus = -1;
 
+
+    /*
+     * Hide dropdown if input is empty
+     */
+
     if (query.length < 1) {
+
       dropdown.style.display = "none";
+
       return;
+
     }
+
+
+    /*
+     * Find matching companies
+     */
 
     const matches = COMPANIES
-      .filter(c => c.toLowerCase().includes(query))
+      .filter(company =>
+        company.toLowerCase().includes(query)
+      )
       .slice(0, 5);
 
+
+    /*
+     * No matches
+     */
+
     if (!matches.length) {
+
       dropdown.style.display = "none";
+
+      return;
+
+    }
+
+
+    /*
+     * Create dropdown items
+     */
+
+    matches.forEach(name => {
+
+      const item = document.createElement("div");
+
+      item.className = "autocomplete-item";
+
+      item.textContent = name;
+
+
+      /*
+       * Select company
+       */
+
+      item.addEventListener("mousedown", function (e) {
+
+        e.preventDefault();
+
+        input.value = name;
+
+        dropdown.style.display = "none";
+
+      });
+
+
+      dropdown.appendChild(item);
+
+      currentItems.push(item);
+
+    });
+
+
+    /*
+     * Show dropdown
+     */
+
+    dropdown.style.display = "block";
+
+  });
+
+
+  /* =====================================================
+     KEYBOARD NAVIGATION
+     ===================================================== */
+
+  input.addEventListener("keydown", function (e) {
+
+    if (
+      !currentItems.length ||
+      dropdown.style.display !== "block"
+    ) {
       return;
     }
 
-    matches.forEach(name => {
-      const item = document.createElement("div");
-      item.className = "autocomplete-item";
-      item.textContent = name;
 
-      item.addEventListener("mousedown", function (e) {
-        e.preventDefault(); // 🔴 IMPORTANT
-        input.value = name;
-        dropdown.style.display = "none";
-      });
-
-      dropdown.appendChild(item);
-      currentItems.push(item);
-    });
-
-    dropdown.style.display = "block";
-  });
-
-  /* ---------- KEYBOARD NAVIGATION ---------- */
-  input.addEventListener("keydown", function (e) {
-    if (!currentItems.length || dropdown.style.display !== "block") return;
+    /*
+     * Arrow Down
+     */
 
     if (e.key === "ArrowDown") {
+
       e.preventDefault();
+
       currentFocus++;
-      if (currentFocus >= currentItems.length) currentFocus = 0;
+
+      if (currentFocus >= currentItems.length) {
+
+        currentFocus = 0;
+
+      }
+
       setActive();
+
     }
+
+
+    /*
+     * Arrow Up
+     */
 
     else if (e.key === "ArrowUp") {
+
       e.preventDefault();
+
       currentFocus--;
-      if (currentFocus < 0) currentFocus = currentItems.length - 1;
+
+      if (currentFocus < 0) {
+
+        currentFocus = currentItems.length - 1;
+
+      }
+
       setActive();
+
     }
+
+
+    /*
+     * Enter
+     */
 
     else if (e.key === "Enter") {
+
       if (currentFocus > -1) {
+
         e.preventDefault();
-        currentItems[currentFocus].dispatchEvent(new MouseEvent("mousedown"));
+
+        currentItems[currentFocus]
+          .dispatchEvent(
+            new MouseEvent("mousedown")
+          );
+
       }
+
     }
+
   });
 
-  /* ---------- ACTIVE ITEM HANDLING ---------- */
+
+  /* =====================================================
+     ACTIVE ITEM
+     ===================================================== */
+
   function setActive() {
+
     removeActive();
 
-    if (currentFocus >= 0 && currentFocus < currentItems.length) {
+
+    if (
+      currentFocus >= 0 &&
+      currentFocus < currentItems.length
+    ) {
+
       const item = currentItems[currentFocus];
+
       item.classList.add("active");
-      item.scrollIntoView({ block: "nearest" });
+
+      item.scrollIntoView({
+        block: "nearest"
+      });
+
     }
+
   }
+
+
+  /* =====================================================
+     REMOVE ACTIVE
+     ===================================================== */
 
   function removeActive() {
-    currentItems.forEach(item => item.classList.remove("active"));
+
+    currentItems.forEach(item => {
+
+      item.classList.remove("active");
+
+    });
+
   }
 
-  /* ---------- CLOSE ON OUTSIDE CLICK ---------- */
+
+  /* =====================================================
+     CLOSE DROPDOWN WHEN CLICKING OUTSIDE
+     ===================================================== */
+
   document.addEventListener("click", function (e) {
-    if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+
+    if (
+      !input.contains(e.target) &&
+      !dropdown.contains(e.target)
+    ) {
+
       dropdown.style.display = "none";
+
     }
+
   });
+
+
+  /* =====================================================
+     SHOW DROPDOWN AGAIN WHEN INPUT GETS FOCUS
+     ===================================================== */
+
+  input.addEventListener("focus", function () {
+
+    const query = this.value.toLowerCase().trim();
+
+    if (!query) {
+      return;
+    }
+
+
+    const matches = COMPANIES
+      .filter(company =>
+        company.toLowerCase().includes(query)
+      )
+      .slice(0, 5);
+
+
+    if (!matches.length) {
+      return;
+    }
+
+
+    /*
+     * Don't duplicate items.
+     */
+
+    if (currentItems.length > 0) {
+
+      dropdown.style.display = "block";
+
+    }
+
+  });
+
 </script>
 
+
+<!-- =======================================================
+     LBH FUNCTIONS
+     ======================================================= -->
+
 <script>
+
   function renderLBH(pieces) {
-    const container = document.getElementById("lbh-inputs");
+
+    const container =
+      document.getElementById("lbh-inputs");
+
     container.innerHTML = "";
 
+
     for (let i = 1; i <= pieces; i++) {
+
       container.innerHTML += `
+
         <div class="lbh-item">
-          <label><strong>Piece ${i} (L,B,H)</strong></label>
+
+          <label>
+            <strong>
+              Piece ${i} (L,B,H)
+            </strong>
+          </label>
+
           <input
             type="text"
             class="form-control lbh-input"
             data-piece="${i}"
             placeholder="e.g. 20,30,40"
           >
+
         </div>
+
       `;
+
     }
+
   }
+
+
+  /* =====================================================
+     COLLECT LBH DATA
+     ===================================================== */
 
   function collectLBH() {
+
     const data = [];
 
-    document.querySelectorAll(".lbh-input").forEach(el => {
-      const piece = parseInt(el.dataset.piece);
-      const value = el.value.trim();
 
-      let l = 0, b = 0, h = 0;
+    document
+      .querySelectorAll(".lbh-input")
+      .forEach(el => {
 
-      if (value) {
-        const parts = value.split(",");
-        if (parts.length === 3) {
-          l = parseFloat(parts[0]) || 0;
-          b = parseFloat(parts[1]) || 0;
-          h = parseFloat(parts[2]) || 0;
+        const piece =
+          parseInt(el.dataset.piece);
+
+        const value =
+          el.value.trim();
+
+
+        let l = 0;
+        let b = 0;
+        let h = 0;
+
+
+        if (value) {
+
+          const parts =
+            value.split(",");
+
+
+          if (parts.length === 3) {
+
+            l =
+              parseFloat(parts[0]) || 0;
+
+            b =
+              parseFloat(parts[1]) || 0;
+
+            h =
+              parseFloat(parts[2]) || 0;
+
+          }
+
         }
-      }
 
-      data.push({ piece, l, b, h });
-    });
 
-    document.getElementById("lbh_json").value = JSON.stringify(data);
+        data.push({
+          piece,
+          l,
+          b,
+          h
+        });
+
+      });
+
+
+    document.getElementById("lbh_json").value =
+      JSON.stringify(data);
+
   }
 
-  // Fetch pieces when docket changes
-  document.getElementById("docket_numbers").addEventListener("blur", function () {
-    const docket = this.value.trim().split("\n")[0];
-    if (!docket) return;
 
-    fetch(`/manifest/ajax/get-pieces/?docket=${docket}`)
-      .then(res => res.json())
-      .then(data => {
-        renderLBH(data.pieces);
-      });
-  });
+  /* =====================================================
+     FETCH PIECES WHEN DOCKET CHANGES
+     ===================================================== */
 
-  // Always collect LBH before submit
-  document.querySelector("form").addEventListener("submit", collectLBH);
+  document
+    .getElementById("docket_numbers")
+    .addEventListener("blur", function () {
 
-  // Default render
+      const docket =
+        this.value
+          .trim()
+          .split("\n")[0];
+
+
+      if (!docket) {
+        return;
+      }
+
+
+      fetch(
+        `/manifest/ajax/get-pieces/?docket=${encodeURIComponent(docket)}`
+      )
+
+        .then(res => {
+
+          if (!res.ok) {
+
+            throw new Error(
+              "Failed to fetch piece information"
+            );
+
+          }
+
+          return res.json();
+
+        })
+
+        .then(data => {
+
+          renderLBH(data.pieces);
+
+        })
+
+        .catch(error => {
+
+          console.error(
+            "Error fetching pieces:",
+            error
+          );
+
+        });
+
+    });
+
+
+  /* =====================================================
+     ALWAYS COLLECT LBH BEFORE SUBMIT
+     ===================================================== */
+
+  document
+    .querySelector("form")
+    .addEventListener("submit", function () {
+
+      collectLBH();
+
+    });
+
+
+  /* =====================================================
+     DEFAULT RENDER
+     ===================================================== */
+
   renderLBH(1);
+
 </script>
 
 {% endblock %}
