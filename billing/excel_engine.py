@@ -149,7 +149,9 @@ def load_latest_pincode_df(PincodeFileModel):
         df = pd.read_excel(xls, sheet_name=sheet)
         # normalize headers and values
         df = df.rename(columns=lambda c: str(c).strip().upper())
-        df = df.applymap(lambda x: str(x).strip() if pd.notna(x) else "")
+        df = df.fillna("").astype(str)
+        df = df.apply(lambda col: col.str.strip())
+
 
         # flexible detection
         pincode_col = next((c for c in df.columns if "PINCODE" in c or "PIN CODE" in c or c == "PIN"), None)
@@ -200,8 +202,6 @@ def get_segment_from_pincode(pincode_df, pincode):
         seg_val = seg_val.iloc[0]
     seg = str(seg_val).strip().upper()
 
-    # special business rule: if the segment value indicates 'PUNE' map to NON METROS
-    # (this preserves existing 'METROS'/'NON METROS' values otherwise)
     if seg == "PUNE" or "PUNE" in seg:
         return "NON METROS"
 
@@ -213,14 +213,11 @@ def get_segment_from_pincode(pincode_df, pincode):
 # -------------------------
 def get_price_by_segment_and_weight(cal_df, segment, weight):
     """
-    cal_df: DataFrame returned by load_cal_df
-    segment: string like 'METROS' or 'NON METROS' etc.
-    weight: numeric (kg)
-    Returns price (float) or None.
+    Returns the correct price by choosing the MOST SPECIFIC
+    weight slab for the given segment.
     """
-    if segment is None or segment == "":
-        return None
-    if weight is None:
+
+    if not segment or weight is None:
         return None
 
     try:
@@ -228,38 +225,55 @@ def get_price_by_segment_and_weight(cal_df, segment, weight):
     except:
         return None
 
-    # ensure DESTINATION normalized
     cal = cal_df.copy()
     cal["DESTINATION"] = cal["DESTINATION"].astype(str).str.upper().str.strip()
 
+    # 1️⃣ Filter by segment (exact first)
     subset = cal[cal["DESTINATION"] == str(segment).upper().strip()]
+
+    # fallback: partial match
     if subset.empty:
-        # try substring contains match (destination may be 'BANGALORE METROS' etc)
         subset = cal[cal["DESTINATION"].str.contains(str(segment).upper().strip(), na=False)]
 
     if subset.empty:
         return None
 
-    # iterate rows and match ranges
-    for _, r in subset.iterrows():
-        start = r.get("START", None)
-        end = r.get("END", None)
+    # 2️⃣ KEEP ONLY RANGES THAT MATCH THE WEIGHT
+    matching_rows = []
 
-        # defensive handling
-        try:
-            if start is None or end is None:
-                continue
-            if start <= w <= (end if not math.isinf(end) else float("inf")):
-                price = r.get("PRICE", None)
-                try:
-                    return float(price) if price is not None else None
-                except:
-                    try:
-                        return float(str(price).strip())
-                    except:
-                        return None
-        except Exception:
-            # skip problematic rows
+    for _, r in subset.iterrows():
+        start = r.get("START")
+        end = r.get("END")
+
+        if start is None or end is None:
             continue
 
-    return None
+        try:
+            if start <= w <= (end if not math.isinf(end) else float("inf")):
+                matching_rows.append(r)
+        except:
+            continue
+
+    if not matching_rows:
+        return None
+
+    # 3️⃣ PICK THE MOST SPECIFIC RANGE
+    # (smallest range width wins)
+    matching_rows.sort(
+        key=lambda r: (
+            (r["END"] - r["START"]) if not math.isinf(r["END"]) else float("inf")
+        )
+    )
+
+    best_match = matching_rows[0]
+    price = best_match.get("PRICE")
+
+    try:
+        if w > 5 :
+            return float(w * price)
+        return float(price)
+    except:
+        try:
+            return float(str(price).strip())
+        except:
+            return None

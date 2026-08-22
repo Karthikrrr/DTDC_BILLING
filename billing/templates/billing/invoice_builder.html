@@ -1,406 +1,759 @@
-{% load static %}
-<!DOCTYPE html>
-<html>
+{% extends "base.html" %} {% block content %} {% load static %}
+
+<!doctype html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8" />
     <title>Invoice Editor</title>
+
     <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
+
     <style>
+      :root {
+        --primary: #4f46e5;
+        --primary-light: #6366f1;
+        --accent: #0ea5e9;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --surface: #ffffff;
+        --surface-soft: #f8fafc;
+        --border: #e2e8f0;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.15);
+        --shadow-lg: 0 20px 40px -15px rgba(15, 23, 42, 0.2);
+        --radius: 1rem;
+        --radius-sm: 0.625rem;
+      }
+
       body {
-        font-family: Calibri, sans-serif;
-        background: #f8f9fa;
-        padding: 20px;
-      }
-      #editor_area {
-        width: 100%;
-        max-width: 1300px;
-        margin: auto;
-        border: 2px solid #000;
-        padding: 20px;
-        background: white;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
+        background: linear-gradient(135deg, #eef2f7 0%, #f1f5f9 100%);
+        font-family: "Inter", "Segoe UI", system-ui, sans-serif;
         font-size: 13px;
-        margin: 15px 0;
+        color: var(--text-main);
+        min-height: 100vh;
       }
-      td,
-      th {
-        border: 1px solid black;
-        padding: 6px;
-        text-align: center;
-        vertical-align: middle;
+
+      /* Page entrance */
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(24px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
-      th {
-        background-color: #f8f9fa;
-        font-weight: bold;
+
+      @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
       }
-      input {
-        width: 100%;
-        border: none;
-        background: transparent;
-        text-align: center;
-        outline: none;
-        padding: 3px;
-        font-size: 12px;
+
+      @keyframes pulse-soft {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.15); }
+        50% { box-shadow: 0 0 0 8px rgba(79, 70, 229, 0); }
       }
-      input:focus {
-        background-color: #fff3cd;
-        border: 1px solid #ffc107;
+
+      @keyframes rowFlash {
+        0% { background-color: rgba(16, 185, 129, 0.18); }
+        100% { background-color: transparent; }
       }
-      .btn-small {
-        font-size: 11px;
-        padding: 3px 6px;
-        margin: 1px;
+
+      @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
       }
-      .total-section {
-        background: #e9ecef;
-        padding: 12px;
-        border-radius: 5px;
-        margin-top: 15px;
+
+      .invoice-wrapper {
+        animation: fadeInUp 0.55s ease both;
       }
-      .header-info {
-        background: #f8f9fa;
-        padding: 15px;
-        border-radius: 5px;
-        margin-bottom: 15px;
-        font-size: 13px;
-      }
-      .action-buttons {
-        margin: 10px 0;
-        text-align: center;
-      }
-      .editable-cell {
+
+      .invoice-box {
+        background: var(--surface);
+        padding: 1.75rem;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
         position: relative;
+        overflow: hidden;
       }
-      .save-indicator {
+
+      .invoice-box::before {
+        content: "";
         position: absolute;
-        top: -3px;
-        right: -3px;
-        background: green;
-        color: white;
-        border-radius: 50%;
-        width: 10px;
-        height: 10px;
-        font-size: 6px;
-        display: none;
+        inset: 0 0 auto 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary), var(--accent), var(--success));
+        background-size: 200% auto;
+        animation: shimmer 3s linear infinite;
       }
+
+      .invoice-title {
+        font-weight: 800;
+        font-size: 1.5rem;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .invoice-title .icon {
+        display: inline-flex;
+        animation: float 4s ease-in-out infinite;
+      }
+
+      .invoice-subtitle {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+      }
+
+      /* Header inputs */
+      .header-card {
+        background: var(--surface-soft);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 1.25rem;
+        margin-bottom: 1.25rem;
+        transition: box-shadow 0.25s ease, transform 0.25s ease;
+        animation: fadeInUp 0.5s ease both;
+        animation-delay: 0.1s;
+      }
+
+      .header-card:hover {
+        box-shadow: var(--shadow-sm);
+      }
+
+      .form-label {
+        font-weight: 600;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-bottom: 0.35rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+
+      .form-control {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 0.55rem 0.75rem;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        background: var(--surface);
+      }
+
+      .form-control:focus {
+        outline: none;
+        border-color: var(--primary-light);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+        background: var(--surface);
+      }
+
+      /* Action buttons */
+      .action-bar {
+        display: flex;
+        justify-content: center;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+        animation: fadeInUp 0.5s ease both;
+        animation-delay: 0.15s;
+      }
+
+      .btn {
+        font-weight: 600;
+        border-radius: var(--radius-sm);
+        padding: 0.55rem 1.25rem;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+      }
+
+      .btn:active {
+        transform: translateY(0);
+      }
+
+      .btn-info {
+        background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+        border: none;
+        color: #fff;
+      }
+
+      .btn-info:hover {
+        background: linear-gradient(135deg, #0284c7, #0ea5e9);
+        color: #fff;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        border: none;
+        color: #fff;
+      }
+
+      .btn-primary:hover {
+        background: linear-gradient(135deg, #4338ca, #4f46e5);
+        color: #fff;
+      }
+
+      /* Table */
+      .table-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        animation: fadeInUp 0.5s ease both;
+        animation-delay: 0.2s;
+      }
+
+      .table-responsive {
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+
+      .table {
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+      }
+
+      .table thead th {
+        background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+        color: #e2e8f0;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0.85rem 0.6rem;
+        border: none;
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+      }
+
+      .table tbody tr {
+        transition: background-color 0.15s ease;
+        animation: fadeInUp 0.4s ease both;
+      }
+
+      .table tbody tr:nth-child(odd) {
+        background: #fafafa;
+      }
+
+      .table tbody tr:hover {
+        background: #f1f5f9;
+      }
+
+      .table tbody tr.row-updated {
+        animation: rowFlash 0.8s ease;
+      }
+
+      .table td {
+        padding: 0.35rem 0.3rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+      }
+
+      .table input {
+        width: 100%;
+        border: 1px solid transparent;
+        border-radius: 0.5rem;
+        text-align: center;
+        background: transparent;
+        padding: 0.35rem 0.25rem;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+      }
+
+      .table input:focus {
+        outline: none;
+        background: #fffbe6;
+        border-color: var(--warning);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12);
+      }
+
+      .table input[readonly],
+      .table input:disabled {
+        background: #f1f5f9;
+        color: var(--text-muted);
+        cursor: default;
+      }
+
+      .table input[readonly]:focus,
+      .table input:disabled:focus {
+        background: #f1f5f9;
+        border-color: transparent;
+        box-shadow: none;
+      }
+
+      .cell-amount input {
+        font-weight: 700;
+        background: #ecfdf5 !important;
+        border-color: #a7f3d0;
+        color: #065f46;
+      }
+
+      .cell-amount input:focus {
+        background: #d1fae5 !important;
+        border-color: var(--success);
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
+      }
+
+      /* Summary / Totals */
+      .summary-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+        box-shadow: var(--shadow);
+        animation: fadeInUp 0.5s ease both;
+        animation-delay: 0.25s;
+      }
+
+      .summary-title {
+        font-weight: 700;
+        font-size: 1rem;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .summary-title::before {
+        content: "💰";
+      }
+
+      .tax-input-group {
+        margin-bottom: 1rem;
+      }
+
+      .tax-input-group label {
+        display: block;
+        font-weight: 600;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-bottom: 0.35rem;
+      }
+
+      .tax-input-group input {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 0.55rem 0.75rem;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+      }
+
+      .tax-input-group input:focus {
+        outline: none;
+        border-color: var(--primary-light);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+      }
+
+      .totals-stack {
+        background: var(--surface-soft);
+        border-radius: var(--radius-sm);
+        padding: 1rem 1.25rem;
+      }
+
+      .total-line {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.55rem 0;
+        border-bottom: 1px dashed #e2e8f0;
+        font-size: 0.95rem;
+      }
+
+      .total-line:last-of-type {
+        border-bottom: none;
+      }
+
+      .total-line span:first-child {
+        color: var(--text-muted);
+      }
+
+      .total-line span:last-child {
+        font-weight: 700;
+        color: var(--text-main);
+      }
+
+      .grand-total-box {
+        margin-top: 1rem;
+        padding: 1rem 1.25rem;
+        border-radius: var(--radius-sm);
+        color: #fff;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 800;
+        font-size: 1.15rem;
+        box-shadow: 0 12px 24px -12px rgba(79, 70, 229, 0.8);
+        transition: transform 0.2s ease;
+      }
+
+      .grand-total-box.bump {
+        animation: bump 0.45s ease;
+      }
+
+      @keyframes bump {
+        0% { transform: scale(1); }
+        45% { transform: scale(1.03); }
+        100% { transform: scale(1); }
+      }
+
+      /* Stagger row animation */
+      .table tbody tr:nth-child(1) { animation-delay: 0.05s; }
+      .table tbody tr:nth-child(2) { animation-delay: 0.1s; }
+      .table tbody tr:nth-child(3) { animation-delay: 0.15s; }
+      .table tbody tr:nth-child(4) { animation-delay: 0.2s; }
+      .table tbody tr:nth-child(5) { animation-delay: 0.25s; }
+      .table tbody tr:nth-child(6) { animation-delay: 0.3s; }
+      .table tbody tr:nth-child(7) { animation-delay: 0.35s; }
+      .table tbody tr:nth-child(8) { animation-delay: 0.4s; }
+      .table tbody tr:nth-child(9) { animation-delay: 0.45s; }
+      .table tbody tr:nth-child(10) { animation-delay: 0.5s; }
     </style>
   </head>
+
   <body>
-    <div class="container-fluid">
-      <div id="editor_area">
-        <!-- Header Information -->
-        <div class="header-info">
-          <div class="row">
-            <div class="col-md-6">
-              <h2
-                style="
-                  text-align: center;
-                  text-decoration: underline;
-                  margin-bottom: 15px;
-                  font-size: 20px;
-                "
-              >
-                INVOICE <img src="" alt="" />
-              </h2>
+    <div class="container-fluid mt-3 invoice-wrapper">
+      <div class="invoice-box">
+        <h4 class="invoice-title">
+          <span class="icon">🧾</span>
+          Invoice Editor For {{ company.name }}
+        </h4>
+        <p class="invoice-subtitle">Review line items, adjust values, and generate the final bill.</p>
 
-              <h5 style="font-size: 16px">DTDC Express Limited</h5>
-              <p class="mb-1" style="font-size: 12px">M.R POINT</p>
-              <p class="mb-1" style="font-size: 12px">
-                NO.240/1, 5TH CROSS, RATHNA JAYRAM COMPLEX, VIJAYNAGAR
-              </p>
-              <p class="mb-1" style="font-size: 12px">
-                RAILWAY COLONY ROAD , SURYA BAKERY CIRCLE , HEBBAL , MYSORE -
-                570016
-              </p>
+        <!-- Invoice Header -->
+        <div class="row header-card g-3">
+          <div class="col-md-4">
+            <label class="form-label">Invoice Number</label>
+            <input type="text" id="invoice_number" class="form-control" />
+          </div>
 
-              <div class="mt-2" style="font-size: 11px">
-                <strong>GSTIN:</strong> 29ANSPV4241P2ZU &nbsp;
-                <strong>PAN:</strong> ANSPV4241P &nbsp;
-                <strong>SAC:</strong> 9968<br />
-                <strong>Ph:</strong> +91(821)4000477 &nbsp;
-                <strong>Mob:</strong> 9902033986/983<br />
-                <strong>Website:</strong> www.dtdc.com
-              </div>
-            </div>
+          <div class="col-md-4">
+            <label class="form-label">Invoice Date</label>
+            <input type="date" id="invoice_date" class="form-control" />
+          </div>
 
-            <div class="col-md-6">
-              <div class="mb-2">
-                <label style="font-size: 12px"
-                  ><strong>Invoice No:</strong></label
-                >
-                <input
-                  type="text"
-                  id="invoice_number"
-                  class="form-control form-control-sm"
-                  value="INV-{{month|default:'001'}}"
-                />
-              </div>
-
-              <div class="mb-2">
-                <label style="font-size: 12px"
-                  ><strong>Invoice Date:</strong></label
-                >
-                <input
-                  type="date"
-                  id="invoice_date"
-                  class="form-control form-control-sm"
-                  value="{{today}}"
-                />
-              </div>
-
-              <div class="mb-2">
-                <label style="font-size: 12px"><strong>BILL TO:</strong></label>
-                <input
-                  type="text"
-                  id="bill_to"
-                  class="form-control form-control-sm"
-                  value="{{company.name}}"
-                />
-              </div>
-
-              <div style="font-size: 12px">
-                <strong>Period:</strong> {{month}}
-              </div>
-            </div>
+          <div class="col-md-4">
+            <label class="form-label">Due Date</label>
+            <input type="date" id="invoice_due_date" class="form-control" />
           </div>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="action-buttons">
-          <button onclick="addNewRow()" class="btn btn-success btn-small">
-            + Add New Row
+        <div class="action-bar">
+          <button class="btn btn-info btn-sm" onclick="recalculateAll()">
+            🔄 Recalculate All
           </button>
-          <button onclick="recalculateAll()" class="btn btn-info btn-small">
-            ↻ Recalculate All
-          </button>
-          <button onclick="exportPDF()" class="btn btn-primary btn-small">
-            📄 Generate PDF
-          </button>
-          <button onclick="clearAllEdits()" class="btn btn-warning btn-small">
-            🗑 Clear All Edits
+          <button class="btn btn-primary btn-sm" onclick="exportPDF()">
+            📄 Generate Bill
           </button>
         </div>
 
-        <!-- Invoice Table -->
-        <div class="table-responsive">
-          <table id="invTable">
-            <thead>
-              <tr id="headerRow">
-                <th>Docket No</th>
-                <th>Date</th>
-                <th>Destination</th>
-                <th>Pincode</th>
-                <th>Segment</th>
-                <th>Pieces</th>
-                <th>Weight (kg)</th>
-                <th>Amount (₹)</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-
-            <tbody id="table_body">
-              {% for b in bills %}
-              <tr id="row-{{b.id}}" data-bill-id="{{b.id}}">
-                <td class="editable-cell">
-                  <input
-                    type="text"
-                    class="docket-no"
-                    value="{{b.docket_no}}"
-                    onchange="updateBill({{b.id}}, 'docket_no', this.value)"
-                  />
-                  <span class="save-indicator">✓</span>
-                </td>
-                <td class="editable-cell">
-                  <input
-                    type="date"
-                    class="date"
-                    value="{{b.date|date:'Y-m-d'}}"
-                    onchange="updateBill({{b.id}}, 'date', this.value)"
-                  />
-                  <span class="save-indicator">✓</span>
-                </td>
-                <td class="editable-cell">
-                  <input
-                    type="text"
-                    class="destination"
-                    value="{{b.destination}}"
-                    onchange="updateBill({{b.id}}, 'destination', this.value)"
-                  />
-                  <span class="save-indicator">✓</span>
-                </td>
-                <td class="editable-cell">
-                  <input
-                    type="text"
-                    class="pincode"
-                    value="{{b.pincode}}"
-                    onchange="updateBill({{b.id}}, 'pincode', this.value)"
-                  />
-                  <span class="save-indicator">✓</span>
-                </td>
-                <td class="editable-cell">
-                  <input
-                    type="text"
-                    class="segment"
-                    value="{{b.segment}}"
-                    onchange="updateBill({{b.id}}, 'segment', this.value)"
-                  />
-                  <span class="save-indicator">✓</span>
-                </td>
-                <td class="editable-cell">
-                  <input
-                    type="number"
-                    class="pieces"
-                    value="{{b.pieces}}"
-                    min="0"
-                    step="1"
-                    onchange="updateBill({{b.id}}, 'pieces', this.value); recalculateRow({{b.id}})"
-                  />
-                  <span class="save-indicator">✓</span>
-                </td>
-                <td class="editable-cell">
-                  <input
-                    type="number"
-                    class="weight"
-                    value="{{b.weight}}"
-                    min="0"
-                    step="0.01"
-                    onchange="updateBill({{b.id}}, 'weight', this.value); recalculateRow({{b.id}})"
-                  />
-                  <span class="save-indicator">✓</span>
-                </td>
-                <td class="editable-cell">
-                  <input
-                    type="number"
-                    class="amount"
-                    value="{{b.amount|default:0}}"
-                    min="0"
-                    step="0.01"
-                    onchange="updateBill({{b.id}}, 'amount', this.value); calculateTotals()"
-                  />
-                  <span class="save-indicator">✓</span>
-                </td>
-                <td>
-                  <button
-                    onclick="deleteBill({{b.id}})"
-                    class="btn btn-danger btn-small"
-                    title="Delete"
-                  >
-                    🗑
-                  </button>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Totals Section -->
-        <div class="total-section">
-          <div class="row">
-            <div class="col-md-6">
-              <h4 style="font-size: 16px">Summary</h4>
-              <p style="font-size: 13px">
-                <strong>Total Pieces:</strong> <span id="totalPieces">0</span>
-              </p>
-              <p style="font-size: 13px">
-                <strong>Total Weight:</strong>
-                <span id="totalWeight">0.00</span> kg
-              </p>
-            </div>
-            <div class="col-md-6">
-              <h3 style="text-align: right; font-size: 16px">
-                Subtotal: ₹ <span id="totalDisplay">0.00</span>
-              </h3>
-              <div class="row mb-2">
-                <div class="col-8 text-end">
-                  <label style="font-size: 13px"
-                    ><strong>GST (%):</strong></label
-                  >
-                </div>
-                <div class="col-4">
-                  <input
-                    type="number"
-                    id="gstPercent"
-                    class="form-control form-control-sm"
-                    value="0"
-                    min="0"
-                    step="0.01"
-                    onchange="calculateTotals()"
-                  />
-                </div>
-              </div>
-              <div class="row mb-2">
-                <div class="col-8 text-end">
-                  <label style="font-size: 13px"
-                    ><strong>GST Amount (₹):</strong></label
-                  >
-                </div>
-                <div class="col-4">
-                  <input
-                    type="number"
-                    id="gstAmount"
-                    class="form-control form-control-sm"
-                    value="0"
-                    min="0"
-                    step="0.01"
-                    onchange="calculateTotalsFromGST()"
-                  />
-                </div>
-              </div>
-              <h2 style="text-align: right; font-size: 18px">
-                Grand Total: ₹ <span id="grandDisplay">0.00</span>
-              </h2>
-              <p
-                style="text-align: right; font-style: italic; font-size: 12px"
-                id="amountInWords"
-              ></p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Hidden Form for PDF Generation -->
         <form
           id="finalForm"
           method="POST"
           action="{% url 'billing:invoice_generate_final_pdf' %}"
         >
           {% csrf_token %}
-          <input type="hidden" name="company_id" value="{{company.id}}" />
-          <input type="hidden" name="month" value="{{month}}" />
           <input
             type="hidden"
-            name="invoice_number"
-            id="final_invoice_number"
+            name="invoice_id"
+            value="{{ bills.0.invoice.id|default:'' }}"
           />
-          <input type="hidden" name="invoice_date" id="final_invoice_date" />
-          <input type="hidden" name="gst" id="final_gst" />
+
+          <input type="hidden" name="company_id" value="{{ company.id }}" />
+          <input type="hidden" name="month" value="{{ month }}" />
+
+          <input type="hidden" name="inv_no" id="final_invoice_number" />
+          <input type="hidden" name="inv_date" id="final_invoice_date" />
+          <input
+            type="hidden"
+            name="inv_due_date"
+            id="final_invoice_due_date"
+          />
+
+          <input type="hidden" id="final_gst" name="gst" />
+          <input type="hidden" id="final_cgst" name="cgst" />
+          <input type="hidden" id="final_igst" name="igst" />
+
+          <input type="hidden" id="final_gst_amount" name="gst_amount" />
+          <input type="hidden" id="final_cgst_amount" name="cgst_amount" />
+          <input type="hidden" id="final_igst_amount" name="igst_amount" />
         </form>
+
+        <!-- TABLE -->
+        <div class="table-card">
+          <div class="table-responsive">
+            <table class="table table-bordered table-sm">
+              <thead>
+                <tr>
+                  <th>Company Name</th>
+                  <th>Docket</th>
+                  <th>Date</th>
+                  <th>Destination</th>
+                  <th>Pincode</th>
+                  <th>Segment</th>
+                  <th>Mode</th>
+                  <th>Inv Amt</th>
+                  <th>Inv @ 3%</th>
+                  <th>Pcs</th>
+                  <th>DOC TYP</th>
+                  <th>Delivery MF WT</th>
+                  <th>Volume Wt</th>
+                  <th>Final Wt</th>
+                  <th>ODA</th>
+                  <th>FSC</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {% for b in bills %}
+                <tr id="row-{{ b.id }}" data-bill-id="{{ b.id }}">
+                      <td>
+                    <input
+                      style="background: #eee"
+                      value="{{ b.company }}"
+                      
+                      readonly
+                    />
+                  </td>
+                  <td>
+                    <input
+                      style="background: #eee"
+                      value="{{ b.docket_no }}"
+                      onchange="updateCell({{ b.id }},'docket_no',this.value)"
+                      readonly
+                    />
+                  </td>
+
+                  <td>
+                    <input
+                      style="background: #eee"
+                      type="date"
+                      value="{{ b.date|date:'Y-m-d' }}"
+                      onchange="updateCell({{ b.id }},'date',this.value)"
+                      readonly
+                    />
+                  </td>
+
+                  <td>
+                    <input
+                      value="{{ b.destination }}"
+                      onchange="updateCell({{ b.id }},'destination',this.value)"
+                    />
+                  </td>
+
+                  <td>
+                    <input
+                      value="{{ b.pincode }}"
+                      onchange="updateCell({{ b.id }},'pincode',this.value)"
+                    />
+                  </td>
+
+                  <td>
+                    <input
+                      class="segment"
+                      readonly
+                      style="background: #eee"
+                      value="{{ b.segment }}"
+                    />
+                  </td>
+
+                  <td>
+                    <input
+                      value="{{ b.mode }}"
+                      onchange="updateCell({{ b.id }},'mode',this.value)"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      class="invamt"
+                      type="text"
+                      value="{{ b.inv_amount }}"
+                      onchange="handleInvAmount({{ b.id }}, this.value)"
+                    />
+                  </td>
+
+                  <td>
+                    <input
+                      class="invamtper"
+                      type="number"
+                      value="{{ b.inv_amt_percent }}"
+                      readonly
+                    />
+                  </td>
+
+                  <td>
+                    <input
+                      style="background: #eee"
+                      type="number"
+                      value="{{ b.pieces }}"
+                      onchange="updateCell({{ b.id }},'pieces',this.value);"
+                      readonly
+                    />
+                  </td>
+                  <td>
+                    <input
+                      style="background: #eee"
+                      type="text"
+                      value="{{ b.doc_type }}"
+                      readonly
+                    />
+                  </td>
+
+                  <td>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value="{{ b.manifest_weight }}"
+                      onchange="updateCell({{ b.id }},'manifest_weight',this.value)"
+                      disabled
+                    />
+                  </td>
+
+                  <td>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value="{{ b.vol_weight }}"
+                      onchange="updateCell({{ b.id }},'vol_weight',this.value)"
+                      disabled
+                    />
+                  </td>
+
+                  <td>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value="{{ b.weight }}"
+                      onchange="updateCell({{ b.id }},'weight',this.value)"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      class="oda"
+                      type="number"
+                      value="{{ b.oda_charges|default:0 }}"
+                      onchange="updateCell({{ b.id }}, 'oda_charges', this.value)"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      class="fsc"
+                      readonly
+                      value="{{ b.fsc_amount|default:0 }}"
+                      style="background: #eee"
+                    />
+                  </td>
+
+                  <td class="cell-amount">
+                    <input
+                      class="amount"
+                      type="number"
+                      step="0.01"
+                      value="{{ b.amount|default:0 }}"
+                      onchange="updateCell({{ b.id }},'amount',this.value)"
+                    />
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SUMMARY -->
+        <div class="summary-card">
+          <div class="summary-title">Taxes &amp; Totals</div>
+          <div class="row g-4">
+            <div class="col-md-5">
+              <div class="tax-input-group">
+                <label for="gstPercent">SGST %</label>
+                <input
+                  type="number"
+                  id="gstPercent"
+                  value="0"
+                  onchange="calculateTotals()"
+                />
+              </div>
+              <div class="tax-input-group">
+                <label for="cgstPercent">CGST %</label>
+                <input
+                  type="number"
+                  id="cgstPercent"
+                  value="0"
+                  onchange="calculateTotals()"
+                />
+              </div>
+              <div class="tax-input-group">
+                <label for="igstPercent">IGST %</label>
+                <input
+                  type="number"
+                  id="igstPercent"
+                  value="0"
+                  onchange="calculateTotals()"
+                />
+              </div>
+            </div>
+
+            <div class="col-md-7">
+              <div class="totals-stack">
+                <div class="total-line">
+                  <span>Subtotal</span>
+                  <span>₹ <span id="subtotal">0.00</span></span>
+                </div>
+                <div class="total-line">
+                  <span>SGST Amount</span>
+                  <span>₹ <span id="gstAmount">0.00</span></span>
+                </div>
+                <div class="total-line">
+                  <span>CGST Amount</span>
+                  <span>₹ <span id="cgstAmount">0.00</span></span>
+                </div>
+                <div class="total-line">
+                  <span>IGST Amount</span>
+                  <span>₹ <span id="igstAmount">0.00</span></span>
+                </div>
+                <div class="grand-total-box" id="grandTotalBox">
+                  <span>Grand Total</span>
+                  <span>₹ <span id="grandTotal">0.00</span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-      // CSRF token for AJAX requests
       const csrftoken = document.querySelector(
-        "[name=csrfmiddlewaretoken]"
-      ).value;
+        "[name=csrfmiddlewaretoken]",
+      )?.value;
 
-      // Initialize totals on page load
-      document.addEventListener("DOMContentLoaded", function () {
-        calculateTotals();
-      });
+      function safe(n) {
+        n = parseFloat(n);
+        return isNaN(n) ? "0.00" : n.toFixed(2);
+      }
 
-      // Update bill data via AJAX (Session only - no DB update)
-      function updateBill(billId, field, value) {
-        const indicator =
-          event.target.parentElement.querySelector(".save-indicator");
-
+      function updateCell(billId, field, value) {
         fetch("{% url 'billing:update_bill_data' %}", {
           method: "POST",
           headers: {
@@ -413,288 +766,128 @@
             value: value,
           }),
         })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.status === "success") {
-              // Show save indicator
-              indicator.style.display = "block";
-              setTimeout(() => {
-                indicator.style.display = "none";
-              }, 2000);
+          .then((r) => r.json())
+          .then((d) => {
+            if (d.status === "success") {
+              const row = document.getElementById("row-" + billId);
+              if (!row) return;
 
-              console.log("Updated in session:", data.message);
+              if (row.querySelector(".segment"))
+                row.querySelector(".segment").value = d.segment || "";
 
-              // If amount field was updated, recalculate totals
-              if (field === "amount") {
-                calculateTotals();
-              }
-            } else {
-              alert("Error: " + data.message);
-            }
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-            alert("Error updating data");
-          });
-      }
+              if (row.querySelector(".amount"))
+                row.querySelector(".amount").value = safe(d.amount);
 
-      // Add new row (Session only)
-      function addNewRow() {
-        fetch("{% url 'billing:create_bill' %}", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrftoken,
-          },
-          body: JSON.stringify({
-            company_id: "{{company.id}}",
-            month: "{{month}}",
-          }),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.status === "success") {
-              // Add row to table without reloading
-              const tableBody = document.getElementById("table_body");
-              const newRow = document.createElement("tr");
-              newRow.id = "row-" + data.bill_id;
-              newRow.setAttribute("data-bill-id", data.bill_id);
+              if (row.querySelector(".fsc"))
+                row.querySelector(".fsc").value = safe(d.fsc_amount);
 
-              newRow.innerHTML = `
-                        <td class="editable-cell">
-                            <input type="text" class="docket-no" value="${data.bill_id}" 
-                                   onchange="updateBill('${data.bill_id}', 'docket_no', this.value)">
-                            <span class="save-indicator">✓</span>
-                        </td>
-                        <td class="editable-cell">
-                            <input type="date" class="date" value="{{today}}" 
-                                   onchange="updateBill('${data.bill_id}', 'date', this.value)">
-                            <span class="save-indicator">✓</span>
-                        </td>
-                        <td class="editable-cell">
-                            <input type="text" class="destination" value="" 
-                                   onchange="updateBill('${data.bill_id}', 'destination', this.value)">
-                            <span class="save-indicator">✓</span>
-                        </td>
-                        <td class="editable-cell">
-                            <input type="text" class="pincode" value="" 
-                                   onchange="updateBill('${data.bill_id}', 'pincode', this.value)">
-                            <span class="save-indicator">✓</span>
-                        </td>
-                        <td class="editable-cell">
-                            <input type="text" class="segment" value="" 
-                                   onchange="updateBill('${data.bill_id}', 'segment', this.value)">
-                            <span class="save-indicator">✓</span>
-                        </td>
-                        <td class="editable-cell">
-                            <input type="number" class="pieces" value="0" min="0" step="1"
-                                   onchange="updateBill('${data.bill_id}', 'pieces', this.value); recalculateRow('${data.bill_id}')">
-                            <span class="save-indicator">✓</span>
-                        </td>
-                        <td class="editable-cell">
-                            <input type="number" class="weight" value="0" min="0" step="0.01"
-                                   onchange="updateBill('${data.bill_id}', 'weight', this.value); recalculateRow('${data.bill_id}')">
-                            <span class="save-indicator">✓</span>
-                        </td>
-                        <td class="editable-cell">
-                            <input type="number" class="amount" value="0" min="0" step="0.01"
-                                   onchange="updateBill('${data.bill_id}', 'amount', this.value); calculateTotals()">
-                            <span class="save-indicator">✓</span>
-                        </td>
-                        <td>
-                            <button onclick="deleteBill('${data.bill_id}')" class="btn btn-danger btn-small" title="Delete">
-                                🗑
-                            </button>
-                        </td>
-                    `;
+              if (row.querySelector(".invamtper"))
+                row.querySelector(".invamtper").value = safe(d.inv_amt_percent);
 
-              tableBody.appendChild(newRow);
               calculateTotals();
-            } else {
-              alert("Error: " + data.message);
             }
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-            alert("Error creating new row");
           });
       }
 
-      // Delete bill (Session only)
-      function deleteBill(billId) {
-        if (!confirm("Are you sure you want to delete this bill?")) {
-          return;
-        }
-
-        fetch("{% url 'billing:delete_bill' %}", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrftoken,
-          },
-          body: JSON.stringify({
-            bill_id: billId,
-          }),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.status === "success") {
-              document.getElementById("row-" + billId).remove();
-              calculateTotals();
-              console.log("Deleted from session:", data.message);
-            } else {
-              alert("Error: " + data.message);
-            }
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-            alert("Error deleting bill");
-          });
+      let lastGstAmount = 0;
+      let lastCgstAmount = 0;
+      let lastIgstAmount = 0;
+      function handleInvAmount(billId, rawValue) {
+        rawValue = rawValue.toString().trim();
+        updateCell(billId, "inv_amount", rawValue);
       }
 
-      // Clear all edits
-      function clearAllEdits() {
-        if (
-          confirm(
-            "Are you sure you want to clear all edits? This will reset to original data."
-          )
-        ) {
-          fetch("{% url 'billing:clear_edits' %}", {
-            method: "POST",
-            headers: {
-              "X-CSRFToken": csrftoken,
-            },
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              if (data.status === "success") {
-                location.reload();
-              }
-            })
-            .catch((error) => {
-              console.error("Error:", error);
-              alert("Error clearing edits");
-            });
-        }
-      }
-
-      // Recalculate row amount based on pieces and weight
-      function recalculateRow(billId) {
-        const row = document.getElementById("row-" + billId);
-        const pieces = parseFloat(row.querySelector(".pieces").value) || 0;
-        const weight = parseFloat(row.querySelector(".weight").value) || 0;
-
-        // Simple calculation: amount = pieces * weight * rate
-        const rate = 10; // Default rate per kg - you can make this dynamic
-        const amount = pieces * weight * rate;
-
-        row.querySelector(".amount").value = amount.toFixed(2);
-        updateBill(billId, "amount", amount.toFixed(2));
-      }
-
-      // Recalculate all rows
       function recalculateAll() {
-        document.querySelectorAll('[id^="row-"]').forEach((row) => {
-          const billId = row.dataset.billId;
-          recalculateRow(billId);
+        document.querySelectorAll("tr[data-bill-id]").forEach((row) => {
+          updateCell(row.dataset.billId, "__recalculate__", "");
         });
       }
 
-      // Calculate totals
-      function calculateTotals() {
-        let totalPieces = 0;
-        let totalWeight = 0;
-        let totalAmount = 0;
 
-        document.querySelectorAll('[id^="row-"]').forEach((row) => {
-          totalPieces += parseFloat(row.querySelector(".pieces").value) || 0;
-          totalWeight += parseFloat(row.querySelector(".weight").value) || 0;
-          totalAmount += parseFloat(row.querySelector(".amount").value) || 0;
-        });
+  function calculateTotals() {
+    let subtotal = 0;
 
-        document.getElementById("totalPieces").textContent = totalPieces;
-        document.getElementById("totalWeight").textContent =
-          totalWeight.toFixed(2);
-        document.getElementById("totalDisplay").textContent =
-          totalAmount.toFixed(2);
+    // Subtotal = SUM of Amount column only
+    document.querySelectorAll(".amount").forEach((el) => {
+      const v = Number(el.value);
+      if (!isNaN(v)) subtotal += v;
+    });
 
-        // Calculate GST and Grand Total
-        const gstPercent =
-          parseFloat(document.getElementById("gstPercent").value) || 0;
-        const gstAmount = totalAmount * (gstPercent / 100);
-        const grandTotal = totalAmount + gstAmount;
+    const gstPercent =
+      Number(document.getElementById("gstPercent").value) || 0;
+    const cgstPercent =
+      Number(document.getElementById("cgstPercent").value) || 0;
+    const igstPercent =
+      Number(document.getElementById("igstPercent").value) || 0;
 
-        document.getElementById("gstAmount").value = gstAmount.toFixed(2);
-        document.getElementById("grandDisplay").textContent =
-          grandTotal.toFixed(2);
+    const gstAmount = (subtotal * gstPercent) / 100;
+    const cgstAmount = (subtotal * cgstPercent) / 100;
+    const igstAmount = (subtotal * igstPercent) / 100;
 
-        // Update amount in words
-        document.getElementById("amountInWords").textContent =
-          numberToWords(grandTotal);
-      }
+    // Save for backend
+    lastGstAmount = gstAmount;
+    lastCgstAmount = cgstAmount;
+    lastIgstAmount = igstAmount;
 
-      // Calculate totals when GST amount is changed directly
-      function calculateTotalsFromGST() {
-        const totalAmount =
-          parseFloat(document.getElementById("totalDisplay").textContent) || 0;
-        const gstAmount =
-          parseFloat(document.getElementById("gstAmount").value) || 0;
-        const grandTotal = totalAmount + gstAmount;
+    const grandTotal =
+      subtotal + gstAmount + cgstAmount + igstAmount;
 
-        // Calculate GST percentage
-        const gstPercent =
-          totalAmount > 0 ? (gstAmount / totalAmount) * 100 : 0;
+    // UI update
+    document.getElementById("subtotal").innerText = subtotal.toFixed(2);
+    document.getElementById("gstAmount").innerText = gstAmount.toFixed(2);
+    document.getElementById("cgstAmount").innerText = cgstAmount.toFixed(2);
+    document.getElementById("igstAmount").innerText = igstAmount.toFixed(2);
+    document.getElementById("grandTotal").innerText = grandTotal.toFixed(2);
 
-        document.getElementById("gstPercent").value = gstPercent.toFixed(2);
-        document.getElementById("grandDisplay").textContent =
-          grandTotal.toFixed(2);
-        document.getElementById("amountInWords").textContent =
-          numberToWords(grandTotal);
-      }
+    // Bump animation on grand total
+    const box = document.getElementById("grandTotalBox");
+    if (box) {
+      box.classList.remove("bump");
+      void box.offsetWidth;
+      box.classList.add("bump");
+    }
+  }
 
-      // Number to words conversion
-      function numberToWords(amount) {
-        // Simple implementation - you can enhance this
-        const num = Math.round(amount);
-        if (num === 0) return "Zero Rupees Only";
-        if (num === 1) return "One Rupee Only";
-        return `Rupees ${num} Only`;
-      }
+  document.addEventListener("DOMContentLoaded", calculateTotals);
 
-      // Export to PDF
+
       function exportPDF() {
-        // Update hidden form fields
-        document.getElementById("final_invoice_number").value =
-          document.getElementById("invoice_number").value;
-        document.getElementById("final_invoice_date").value =
-          document.getElementById("invoice_date").value;
-        document.getElementById("final_gst").value =
-          document.getElementById("gstAmount").value;
+        calculateTotals(); // ensure latest values
 
-        // Submit form
+        document.getElementById("final_invoice_number").value =
+          document.getElementById("invoice_number").value || "";
+
+        document.getElementById("final_invoice_date").value =
+          document.getElementById("invoice_date").value || "";
+
+        document.getElementById("final_invoice_due_date").value =
+          document.getElementById("invoice_due_date").value || "";
+
+        // Percentages
+        document.getElementById("final_gst").value =
+          document.getElementById("gstPercent").value || 0;
+
+        document.getElementById("final_cgst").value =
+          document.getElementById("cgstPercent").value || 0;
+
+        document.getElementById("final_igst").value =
+          document.getElementById("igstPercent").value || 0;
+
+        // Calculated amounts
+        document.getElementById("final_gst_amount").value =
+          lastGstAmount.toFixed(2);
+
+        document.getElementById("final_cgst_amount").value =
+          lastCgstAmount.toFixed(2);
+
+        document.getElementById("final_igst_amount").value =
+          lastIgstAmount.toFixed(2);
+
         document.getElementById("finalForm").submit();
       }
 
-      // Auto-save functionality
-      let saveTimeout;
-      function debouncedSave(billId, field, value) {
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(() => {
-          updateBill(billId, field, value);
-        }, 1000);
-      }
-
-      // Add event listeners for real-time editing
-      document.addEventListener("input", function (e) {
-        if (
-          e.target.classList.contains("pieces") ||
-          e.target.classList.contains("weight")
-        ) {
-          const row = e.target.closest('[id^="row-"]');
-          const billId = row.dataset.billId;
-          debouncedSave(billId, e.target.classList[0], e.target.value);
-        }
-      });
+      document.addEventListener("DOMContentLoaded", calculateTotals);
     </script>
   </body>
 </html>
+{% endblock %}

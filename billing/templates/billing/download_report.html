@@ -1,41 +1,217 @@
 {% extends "base.html" %}
+
+{% block title %}Select Company & Bill - Billing Suite{% endblock %}
+{% block page_title %}Invoice Selector{% endblock %}
+
 {% block content %}
 
-<h2>Select Company & Month</h2>
+<style>
+  .selector-card {
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: var(--card-shadow);
+    border: 1px solid rgba(15, 23, 42, .05);
+    padding: 2rem;
+    max-width: 520px;
+    margin: 0 auto;
+    animation: slideUp .55s ease both;
+    position: relative;
+    overflow: hidden;
+  }
 
-<form method="get" action="" id="invoiceForm">
+  .selector-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--info), var(--success));
+    background-size: 200% auto;
+    animation: shimmer 3s linear infinite;
+  }
 
-    <label>Company:</label>
-    <select name="company" class="form-select" required>
-        <option value="">-- Select --</option>
-        {% for c in companies %}
-        <option value="{{ c.id }}">{{ c.name }}</option>
-        {% endfor %}
-    </select>
+  .selector-header {
+    text-align: center;
+    margin-bottom: 1.75rem;
+    animation: fadeIn .6s ease both;
+    animation-delay: .1s;
+  }
 
-    <label class="mt-2">Month:</label>
-    <select name="month" class="form-select" required>
-        <option value="">-- Select --</option>
-        {% for m in months %}
-        <option value="{{ m }}">{{ m }}</option>
-        {% endfor %}
-    </select>
+  .selector-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 1rem;
+    background: linear-gradient(135deg, var(--primary), #818cf8);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 10px 22px rgba(79, 70, 229, .35);
+    animation: float 4s ease-in-out infinite;
+  }
 
-    <button type="submit" class="btn btn-primary mt-3 w-100">
+  .selector-title {
+    font-weight: 800;
+    font-size: 1.4rem;
+    letter-spacing: -.02em;
+    margin-bottom: .35rem;
+  }
+
+  .selector-subtitle {
+    color: var(--secondary);
+    font-size: .9rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.25rem;
+    animation: slideUp .5s ease both;
+  }
+
+  .form-group:nth-child(1) { animation-delay: .15s; }
+  .form-group:nth-child(2) { animation-delay: .2s; }
+
+  .form-label {
+    font-weight: 600;
+    font-size: .85rem;
+    color: #334155;
+    margin-bottom: .5rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+  }
+
+  .form-select {
+    border: 1px solid #e2e8f0;
+    border-radius: .625rem;
+    padding: .75rem 1rem;
+    font-size: .95rem;
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+    background-color: #fff;
+  }
+
+  .form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, .12);
+    outline: none;
+  }
+
+  .btn-generate {
+    width: 100%;
+    border: none;
+    color: #fff;
+    padding: .85rem 1.5rem;
+    border-radius: .625rem;
+    font-weight: 700;
+    font-size: 1rem;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    box-shadow: 0 6px 18px rgba(79, 70, 229, .35);
+    transition: transform .25s ease, box-shadow .25s ease;
+    animation: slideUp .5s ease both;
+    animation-delay: .25s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+  }
+
+  .btn-generate:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(79, 70, 229, .45);
+  }
+
+  .btn-generate:active {
+    transform: translateY(0);
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+</style>
+
+<div class="container">
+  <div class="selector-card">
+    <div class="selector-header">
+      <div class="selector-icon">
+        <i class="bi bi-building-check"></i>
+      </div>
+      <h2 class="selector-title">Select Company &amp; Bill</h2>
+      <p class="selector-subtitle">Choose a company and bill to open the editable invoice.</p>
+    </div>
+
+    <form id="invoiceForm" onsubmit="return false;">
+      <div class="form-group">
+        <label class="form-label" for="companySelect">
+          <i class="bi bi-building text-primary"></i> <strong>Company</strong>
+        </label>
+        <select id="companySelect" class="form-select" required>
+          <option value="">-- Select --</option>
+          {% for c in companies %}
+          <option value="{{ c.id }}">{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="invoiceSelect">
+          <i class="bi bi-receipt text-primary"></i> <strong>Bill Name</strong>
+        </label>
+        <select id="invoiceSelect" class="form-select">
+          <option value="">-- Select Bill --</option>
+          {% for inv in invoices %}
+          <option value="{{ inv.id }}">{{ inv.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <button
+        type="button"
+        class="btn btn-primary mt-2 w-100 btn-generate"
+        onclick="generateInvoice()"
+      >
+        <i class="bi bi-pencil-square"></i>
         Open Editable Invoice
-    </button>
-
-</form>
+      </button>
+    </form>
+  </div>
+</div>
 
 <script>
-document.getElementById("invoiceForm").onsubmit = function(e){
-    const c = this.company.value;
-    const m = this.month.value;
+function generateInvoice() {
+  const companyId = document.getElementById("companySelect").value;
+  const invoiceId = document.getElementById("invoiceSelect").value;
 
-    if(c && m){
-        window.location.href = `/billing/invoice/${c}/${m}/`;
-        return false;
-    }
+  if (!companyId) {
+    alert("Please select a company");
+    return;
+  }
+
+  if (!invoiceId) {
+    alert("Please select a bill name");
+    return;
+  }
+
+  // ✅ DEBUG (optional – remove later)
+  console.log("Company:", companyId, "Invoice:", invoiceId);
+
+  window.location.href =
+    `/billing/invoice/by-invoice/${invoiceId}/?company=${companyId}`;
 }
 </script>
 

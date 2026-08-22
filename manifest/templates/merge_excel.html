@@ -1,28 +1,295 @@
 {% extends "base.html" %}
+
+{% block title %}Merge Excel Files - Billing Suite{% endblock %}
+{% block page_title %}Merge Excel Files{% endblock %}
+
 {% block content %}
 
-<h2>Merge Excel Files</h2>
+<style>
+  .merge-card {
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: var(--card-shadow);
+    border: 1px solid rgba(15, 23, 42, .05);
+    padding: 2rem;
+    max-width: 560px;
+    margin: 0 auto;
+    animation: slideUp .55s ease both;
+    position: relative;
+    overflow: hidden;
+  }
 
-{% if message %}
-<div class="alert alert-danger">{{ message }}</div>
-{% endif %}
+  .merge-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--info), var(--success));
+    background-size: 200% auto;
+    animation: shimmer 3s linear infinite;
+  }
 
-<form method="post" enctype="multipart/form-data">
-  {% csrf_token %}
+  .merge-header {
+    text-align: center;
+    margin-bottom: 1.75rem;
+    animation: fadeIn .6s ease both;
+    animation-delay: .1s;
+  }
 
-  <div class="mb-3">
-    <label class="form-label">Excel File 1 (Manifest)</label>
-    <input type="file" name="excel1" class="form-control" required>
+  .merge-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 1rem;
+    background: linear-gradient(135deg, var(--success), #059669);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 10px 22px rgba(16, 185, 129, .35);
+    animation: float 4s ease-in-out infinite;
+  }
+
+  .merge-title {
+    font-weight: 800;
+    font-size: 1.4rem;
+    letter-spacing: -.02em;
+    margin-bottom: .35rem;
+  }
+
+  .merge-subtitle {
+    color: var(--secondary);
+    font-size: .9rem;
+  }
+
+  .file-drop {
+    position: relative;
+    border: 2px dashed #e2e8f0;
+    border-radius: .75rem;
+    padding: 1.25rem 1rem;
+    text-align: center;
+    background: #f8fafc;
+    transition: border-color .2s ease, background-color .2s ease, transform .2s ease;
+    cursor: pointer;
+    animation: slideUp .5s ease both;
+  }
+
+  .file-drop:hover {
+    border-color: var(--primary);
+    background: #f1f5f9;
+    transform: translateY(-2px);
+  }
+
+  .file-drop input[type="file"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .file-drop-icon {
+    font-size: 1.5rem;
+    color: var(--primary);
+    margin-bottom: .5rem;
+  }
+
+  .file-drop-label {
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: .25rem;
+    display: block;
+  }
+
+  .file-drop-hint {
+    font-size: .8rem;
+    color: var(--secondary);
+  }
+
+  .file-name {
+    margin-top: .5rem;
+    font-size: .85rem;
+    color: var(--primary);
+    font-weight: 600;
+    min-height: 1.25rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.25rem;
+  }
+
+  .form-label-section {
+    font-weight: 600;
+    font-size: .85rem;
+    color: #334155;
+    margin-bottom: .5rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+  }
+
+  .btn-merge {
+    width: 100%;
+    border: none;
+    color: #fff;
+    padding: .85rem 1.5rem;
+    border-radius: .625rem;
+    font-weight: 700;
+    font-size: 1rem;
+    background: linear-gradient(135deg, var(--success), #059669);
+    box-shadow: 0 6px 18px rgba(16, 185, 129, .35);
+    transition: transform .25s ease, box-shadow .25s ease;
+    animation: slideUp .5s ease both;
+    animation-delay: .25s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+  }
+
+  .btn-merge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(16, 185, 129, .45);
+  }
+
+  .btn-merge:active {
+    transform: translateY(0);
+  }
+
+  .alert-custom {
+    border: none;
+    border-radius: .75rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    font-weight: 500;
+    animation: shake .5s ease both;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+  }
+
+  .alert-danger {
+    background: #fef2f2;
+    color: #991b1b;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, .12);
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+</style>
+
+<div class="container">
+  <div class="merge-card">
+    <div class="merge-header">
+      <div class="merge-icon">
+        <i class="bi bi-file-earmark-spreadsheet"></i>
+      </div>
+      <h2 class="merge-title">Merge Excel Files</h2>
+      <p class="merge-subtitle">Upload the manifest and additional data files to merge them into one.</p>
+    </div>
+
+    {% if message %}
+    <div class="alert alert-danger alert-custom" role="alert">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <span>{{ message }}</span>
+    </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label class="form-label-section">
+          <i class="bi bi-file-earmark-excel text-success"></i> Excel File 1 (Manifest)
+        </label>
+        <div class="file-drop" id="drop1">
+          <input type="file" name="excel1" class="form-control" required onchange="showFileName(this, 'name1')">
+          <div class="file-drop-icon"><i class="bi bi-cloud-upload"></i></div>
+          <span class="file-drop-label">Click or drop manifest file here</span>
+          <span class="file-drop-hint">.xlsx, .xls accepted</span>
+          <div class="file-name" id="name1"></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label-section">
+          <i class="bi bi-file-earmark-plus text-success"></i> Excel File 2 (Additional Data)
+        </label>
+        <div class="file-drop" id="drop2">
+          <input type="file" name="excel2" class="form-control" required onchange="showFileName(this, 'name2')">
+          <div class="file-drop-icon"><i class="bi bi-cloud-upload"></i></div>
+          <span class="file-drop-label">Click or drop additional data file here</span>
+          <span class="file-drop-hint">.xlsx, .xls accepted</span>
+          <div class="file-name" id="name2"></div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-merge" type="submit">
+        <i class="bi bi-intersect"></i>
+        Merge Excel Files
+      </button>
+    </form>
   </div>
+</div>
 
-  <div class="mb-3">
-    <label class="form-label">Excel File 2 (Additional Data)</label>
-    <input type="file" name="excel2" class="form-control" required>
-  </div>
+<script>
+  function showFileName(input, targetId) {
+    const target = document.getElementById(targetId);
+    if (input.files && input.files[0]) {
+      target.textContent = "Selected: " + input.files[0].name;
+    } else {
+      target.textContent = "";
+    }
+  }
 
-  <button class="btn btn-primary">
-    Merge Excel Files
-  </button>
-</form>
+  // Drag-and-drop visual feedback
+  ['drop1', 'drop2'].forEach(id => {
+    const zone = document.getElementById(id);
+    if (!zone) return;
+
+    zone.addEventListener('dragover', e => {
+      e.preventDefault();
+      zone.style.borderColor = 'var(--primary)';
+      zone.style.background = '#f1f5f9';
+    });
+
+    zone.addEventListener('dragleave', () => {
+      zone.style.borderColor = '#e2e8f0';
+      zone.style.background = '#f8fafc';
+    });
+
+    zone.addEventListener('drop', () => {
+      zone.style.borderColor = '#e2e8f0';
+      zone.style.background = '#f8fafc';
+    });
+  });
+</script>
 
 {% endblock %}

@@ -1,22 +1,267 @@
-<!doctype html>
-<html>
+{% load static %}<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Billing Dashboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Billing Dashboard{% endblock %}</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="https://karthikr.great-site.net/dtdcl.png">
+
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --secondary: #64748b;
+            --success: #10b981;
+            --info: #0ea5e9;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-body: #f6f7fb;
+            --card-shadow: 0 4px 6px -1px rgba(15, 23, 42, .08), 0 2px 4px -1px rgba(15, 23, 42, .05);
+            --card-shadow-hover: 0 20px 30px -12px rgba(15, 23, 42, .18);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-body);
+            background-image:
+                radial-gradient(circle at 10% -10%, rgba(79, 70, 229, .10), transparent 45%),
+                radial-gradient(circle at 100% 0%, rgba(14, 165, 233, .10), transparent 40%);
+            background-attachment: fixed;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+
+        /* ============ Top Navbar ============ */
+        .app-navbar {
+            background: rgba(255, 255, 255, .85);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(15, 23, 42, .07);
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+            animation: fadeIn .5s ease both;
+        }
+
+        .app-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: .75rem;
+            padding: .35rem .85rem .35rem .45rem;
+            border-radius: 1rem;
+            font-weight: 800;
+            font-size: 1.15rem;
+            letter-spacing: -.02em;
+            color: #0f172a;
+            text-decoration: none;
+            border: 1px solid transparent;
+            transition: background .25s ease, border-color .25s ease, box-shadow .25s ease, transform .25s ease;
+        }
+
+        .app-brand:hover,
+        .app-brand:focus-visible {
+            color: #0f172a;
+            background: rgba(79, 70, 229, .07);
+            border-color: rgba(79, 70, 229, .18);
+            box-shadow: 0 10px 22px -14px rgba(79, 70, 229, .8);
+            transform: translateY(-1px);
+        }
+
+        .app-brand:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+        .app-brand:active { transform: translateY(0) scale(.985); }
+
+        .app-brand-text { display: flex; flex-direction: column; line-height: 1.05; }
+        .app-brand-text .brand-sub {
+            font-size: .68rem;
+            font-weight: 600;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+            color: var(--secondary);
+        }
+
+        .app-brand-logo {
+            height: 45px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+            border-radius: .6rem;
+            transition: transform .3s ease, filter .3s ease;
+        }
+
+        .app-brand:hover .app-brand-logo {
+            transform: scale(1.06) rotate(-1.5deg);
+            filter: drop-shadow(0 6px 12px rgba(15, 23, 42, .18));
+        }
+
+
+        .app-brand-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.15rem;
+            background: linear-gradient(135deg, var(--primary), #818cf8);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, .35);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .user-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .45rem 1rem;
+            background: rgba(79, 70, 229, .1);
+            color: var(--primary);
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: .875rem;
+        }
+         .user-badge-logout {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .45rem 1rem;
+            background: rgba(229, 81, 70, 0.1);
+            /* color: var(--primary); */
+            color: red;
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: .875rem;
+        }
+
+        /* ============ Content ============ */
+        .content-area { padding: 2.25rem 0 3rem; }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        /* ============ Cards / Buttons ============ */
+        .dashboard-card {
+            background: #fff;
+            border-radius: 1rem;
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(15, 23, 42, .05);
+            transition: transform .3s ease, box-shadow .3s ease;
+            animation: slideUp .5s ease both;
+        }
+
+        .dashboard-card:hover {
+            box-shadow: var(--card-shadow-hover);
+            transform: translateY(-4px);
+        }
+
+        .btn-primary-custom,
+        .btn-success-custom {
+            border: none;
+            color: #fff;
+            padding: .75rem 1.5rem;
+            border-radius: .625rem;
+            font-weight: 600;
+            transition: transform .25s ease, box-shadow .25s ease;
+        }
+
+        .btn-primary-custom {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            box-shadow: 0 4px 14px rgba(79, 70, 229, .35);
+        }
+
+        .btn-success-custom {
+            background: linear-gradient(135deg, var(--success), #059669);
+            box-shadow: 0 4px 14px rgba(16, 185, 129, .35);
+        }
+
+        .btn-primary-custom:hover,
+        .btn-success-custom:hover {
+            transform: translateY(-2px);
+            color: #fff;
+        }
+
+        /* ============ Animations ============ */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .animate-fade-in { animation: fadeIn .6s ease both; }
+        .animate-slide-up { animation: slideUp .5s ease both; }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+
+        .text-gradient {
+            background: linear-gradient(135deg, var(--primary), #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * { animation: none !important; transition: none !important; }
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-light">
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <div class="container">
-    <a class="navbar-brand" href="/billing/dashboard/">Billing</a>
-    <a class="btn btn-primary " href="/billing/dashboard/">Dashboard</a>
-    <div class="ms-auto">
-      <a class="btn btn-outline-light" href="/admin/">Admin</a>
-    </div>
-  </div>
-</nav>
-<div class="container mt-4">
-  {% block content %}{% endblock %}
-</div>
+<body>
+    <!-- Navbar -->
+    <nav class="app-navbar">
+        <div class="container d-flex align-items-center justify-content-between py-3">
+            <a href="/" class="app-brand" aria-label="DTDC BillingSuite — go to dashboard">
+                {% block brand %}
+                <img src="https://karthikr.great-site.net/dtdcl.png" alt="DTDC logo" class="app-brand-logo"
+                     onerror="this.style.display='none'; document.getElementById('brandFallbackIcon').style.display='flex';">
+                <span class="app-brand-icon" id="brandFallbackIcon" style="display:none"><i class="bi bi-truck"></i></span>
+                <span class="app-brand-text">
+                    <span>DTDC <span class="text-gradient">BILLINGSUITE</span></span>
+                    <span class="brand-sub">Billing &amp; Manifest</span>
+                </span>
+                {% endblock %}
+            </a>
+
+            <div class="d-flex align-items-center gap-3 ">
+                <h1 class="page-title d-none d-md-block">{% block page_title %}{% endblock %}</h1>
+               <a href="/admin"> <span class="user-badge app-brand"><i class="bi bi-shield-check"></i> Admin</span></a>
+               <a href="/logout"> <span class="user-badge-logout app-brand"><i class="bi bi-shield-check"></i> Logout</span></a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="content-area">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        document.querySelectorAll('.dashboard-card').forEach((card, i) => {
+            card.style.animationDelay = (i * 0.06) + 's';
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
 </body>
 </html>
